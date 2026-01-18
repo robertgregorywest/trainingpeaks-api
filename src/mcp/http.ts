@@ -22,6 +22,37 @@ async function main() {
   // Connect server to transport
   await server.connect(transport);
 
+  // Health check / info endpoint
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'trainingpeaks-mcp',
+      version: '0.1.0',
+      status: 'running',
+      mcp_endpoint: '/mcp',
+      usage: 'POST JSON-RPC requests to /mcp',
+    });
+  });
+
+  // MCP endpoint info for GET requests
+  app.get('/mcp', (_req, res) => {
+    res.json({
+      error: 'Method not allowed',
+      message: 'MCP endpoint only accepts POST requests with JSON-RPC payload',
+      example: {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/event-stream',
+        },
+        body: {
+          jsonrpc: '2.0',
+          method: 'tools/list',
+          id: 1,
+        },
+      },
+    });
+  });
+
   // Handle MCP requests at /mcp endpoint
   app.post('/mcp', async (req, res) => {
     try {
