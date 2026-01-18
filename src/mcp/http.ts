@@ -4,6 +4,7 @@ import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { TrainingPeaksClient } from '../index.js';
 import { createMcpServer } from './server.js';
+import { logRequest } from './logger.js';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
@@ -56,6 +57,10 @@ async function main() {
   // Handle MCP requests at /mcp endpoint
   app.post('/mcp', async (req, res) => {
     try {
+      // Log the incoming request
+      if (req.body?.method) {
+        logRequest(req.body.method, req.body.params);
+      }
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error('Error handling MCP request:', error);
