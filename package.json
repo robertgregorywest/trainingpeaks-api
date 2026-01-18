@@ -1,7 +1,7 @@
 {
-  "name": "trainingpeaks-api",
+  "name": "trainingpeaks-mcp",
   "version": "0.1.0",
-  "description": "An API to allow programmatic access to your TrainingPeaks data",
+  "description": "MCP server for programmatic access to your TrainingPeaks data",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,11 +11,17 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "bin": {
+    "trainingpeaks-mcp": "./dist/mcp/stdio.js",
+    "trainingpeaks-mcp-http": "./dist/mcp/http.js"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsc",
+    "start": "node dist/mcp/stdio.js",
+    "start:http": "node dist/mcp/http.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write .",
@@ -30,22 +36,25 @@
     "trainingpeaks",
     "fitness",
     "training",
-    "api"
+    "api",
+    "mcp",
+    "model-context-protocol"
   ],
   "author": "Rob West <robertgregorywest@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/robertgregorywest/trainingpeaks-api.git"
+    "url": "git+https://github.com/robertgregorywest/trainingpeaks-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/robertgregorywest/trainingpeaks-api/issues"
+    "url": "https://github.com/robertgregorywest/trainingpeaks-mcp/issues"
   },
-  "homepage": "https://github.com/robertgregorywest/trainingpeaks-api#readme",
+  "homepage": "https://github.com/robertgregorywest/trainingpeaks-mcp#readme",
   "engines": {
     "node": ">=20.0.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
@@ -57,7 +66,11 @@
     "vitest": "^2.0.0"
   },
   "dependencies": {
+    "@garmin/fitsdk": "^21.171.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "express": "^5.0.0",
     "playwright": "^1.57.0",
-    "typescript-eslint": "^8.53.0"
+    "typescript-eslint": "^8.53.0",
+    "zod": "^3.24.0"
   }
 }

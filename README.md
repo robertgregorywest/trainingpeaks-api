@@ -1,140 +1,139 @@
 # trainingpeaks-mcp
 
-A TypeScript library for access to your TrainingPeaks data.
+An MCP (Model Context Protocol) server for accessing your TrainingPeaks training data. Works with Claude Desktop, ChatGPT, and other MCP-compatible clients.
 
-## Installation
+## Features
 
-```bash
-npm install trainingpeaks-api
+- **15 tools** for accessing workouts, fitness metrics, peaks/PRs, and files
+- **Dual transport**: stdio for Claude Desktop, HTTP for ChatGPT
+- **FIT file parsing**: Extract structured data from downloaded FIT files
+- Also usable as a standalone TypeScript library
+
+## Quick Start
+
+### Claude Desktop
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "trainingpeaks": {
+      "command": "npx",
+      "args": ["trainingpeaks-mcp"],
+      "env": {
+        "TP_USERNAME": "your-email@example.com",
+        "TP_PASSWORD": "your-password"
+      }
+    }
+  }
+}
 ```
 
-You'll also need to install Playwright's Chromium browser:
+Install Playwright's Chromium (required for authentication):
 
 ```bash
 npx playwright install chromium
 ```
 
-## Usage
+Restart Claude Desktop. You can now ask Claude about your training data!
+
+### ChatGPT (via HTTP)
+
+1. Clone and install:
+   ```bash
+   git clone https://github.com/robertgregorywest/trainingpeaks-mcp.git
+   cd trainingpeaks-mcp
+   npm install
+   npx playwright install chromium
+   ```
+
+2. Set environment variables:
+   ```bash
+   export TP_USERNAME="your-email@example.com"
+   export TP_PASSWORD="your-password"
+   ```
+
+3. Start the HTTP server:
+   ```bash
+   npm run build
+   npm run start:http
+   ```
+
+4. Expose via ngrok:
+   ```bash
+   ngrok http 3000
+   ```
+
+5. Add the ngrok URL as an MCP connector in ChatGPT settings.
+
+## Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_user` | Get user profile including athlete ID |
+| `get_athlete_id` | Get just the athlete ID |
+| `get_workouts` | List workouts in a date range |
+| `get_workout` | Get single workout summary |
+| `get_workout_details` | Get workout with full metrics, intervals, laps, zones |
+| `download_fit_file` | Download FIT file (saves to temp path) |
+| `download_attachment` | Download workout attachment |
+| `parse_fit_file` | Parse FIT file and extract structured data |
+| `get_fitness_data` | Get CTL/ATL/TSB for date range |
+| `get_current_fitness` | Get today's fitness metrics |
+| `get_peaks` | Get peaks for specific sport and type |
+| `get_all_peaks` | Get all peaks for a sport |
+| `get_workout_peaks` | Get PRs from specific workout |
+| `get_power_peaks` | Get cycling power PRs |
+| `get_running_peaks` | Get running pace PRs |
+
+## Example Prompts
+
+- "What workouts did I do last week?"
+- "Show me my current fitness (CTL, ATL, TSB)"
+- "What are my best 5-minute power efforts?"
+- "Get details for my most recent ride including heart rate zones"
+- "Download and parse the FIT file from yesterday's run"
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `TP_USERNAME` | TrainingPeaks email address |
+| `TP_PASSWORD` | TrainingPeaks password |
+| `PORT` | HTTP server port (default: 3000) |
+
+## Library Usage
+
+You can also use this package as a standalone TypeScript library:
 
 ```typescript
-import { createClient } from 'trainingpeaks-api';
+import { createClient } from 'trainingpeaks-mcp';
 
-// Create client using environment variables
 const client = createClient();
-
-// Or pass credentials directly
-const client = createClient({
-  username: 'your-email@example.com',
-  password: 'your-password',
-});
-
-// Get user info
-const user = await client.getUser();
-console.log(`Athlete ID: ${user.athleteId}`);
 
 // Get workouts for a date range
 const workouts = await client.getWorkouts('2024-01-01', '2024-12-31');
 
 // Get workout details with metrics
 const details = await client.getWorkoutDetails(workouts[0].workoutId);
-console.log(details.metrics); // HR, power, cadence, etc.
+console.log(details.metrics);
 
-// Get current fitness (CTL/ATL/TSB)
+// Get current fitness
 const fitness = await client.getCurrentFitness();
+console.log(`CTL: ${fitness.ctl}, ATL: ${fitness.atl}, TSB: ${fitness.tsb}`);
 
 // Clean up when done
 await client.close();
 ```
 
-## Environment Variables
-
-Set these environment variables to avoid passing credentials in code:
+## Development
 
 ```bash
-TP_USERNAME=your-email@example.com
-TP_PASSWORD=your-password
-```
-
-## API Reference
-
-### Client Options
-
-```typescript
-const client = createClient({
-  username?: string,    // TrainingPeaks email (or use TP_USERNAME env var)
-  password?: string,    // TrainingPeaks password (or use TP_PASSWORD env var)
-  headless?: boolean,   // Run browser in headless mode (default: true)
-});
-```
-
-### Methods
-
-#### User
-
-- `getUser()` - Get user profile including athlete ID
-- `getAthleteId()` - Get just the athlete ID
-
-#### Workouts
-
-- `getWorkouts(startDate, endDate, options?)` - List workouts in date range
-- `getWorkout(workoutId)` - Get single workout summary
-- `getWorkoutDetails(workoutId)` - Get workout with full metrics
-
-#### Files
-
-- `downloadFitFile(workoutId)` - Download FIT file as Buffer
-- `downloadAttachment(workoutId, attachmentId)` - Download attachment as Buffer
-
-#### Fitness
-
-- `getFitnessData(startDate, endDate)` - Get CTL/ATL/TSB for date range
-- `getCurrentFitness()` - Get today's fitness metrics
-
-#### Peaks
-
-- `getPeaks(sport, type, options?)` - Get personal records
-- `getAllPeaks(sport, options?)` - Get all PRs for a sport
-- `getWorkoutPeaks(workoutId)` - Get PRs from a specific workout
-- `getPowerPeaks(options?)` - Get cycling power PRs
-- `getRunningPeaks(options?)` - Get running pace PRs
-
-### Types
-
-```typescript
-interface WorkoutSummary {
-  workoutId: number;
-  athleteId: number;
-  title?: string;
-  workoutDay: string;
-  workoutType: string;
-  totalTime?: number;        // hours
-  totalDistance?: number;    // meters
-  tssActual?: number;
-  elevationGain?: number;
-  // ... and more
-}
-
-interface WorkoutDetail extends WorkoutSummary {
-  metrics?: {
-    averageHeartRate?: number;
-    maxHeartRate?: number;
-    averagePower?: number;
-    maxPower?: number;
-    normalizedPower?: number;
-    averageCadence?: number;
-    maxCadence?: number;
-    averageSpeed?: number;
-    maxSpeed?: number;
-  };
-}
-
-interface FitnessMetrics {
-  date: string;
-  ctl: number;
-  atl: number;
-  tsb: number;
-  dailyTss?: number;
-}
+npm run build        # Compile TypeScript
+npm run lint         # Run ESLint
+npm run test         # Run tests
+npm run typecheck    # Type-check without emitting
 ```
 
 ## How It Works

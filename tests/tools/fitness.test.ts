@@ -1,0 +1,35 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { getFitnessData, getCurrentFitness } from '../../src/mcp/tools/fitness.js';
+import { createMockClient, mockFitnessMetrics, type MockClient } from '../mocks/client.js';
+import type { TrainingPeaksClient } from '../../src/index.js';
+
+describe('fitness tools', () => {
+  let mockClient: MockClient;
+
+  beforeEach(() => {
+    mockClient = createMockClient();
+  });
+
+  describe('getFitnessData', () => {
+    it('should return fitness data as JSON', async () => {
+      const result = await getFitnessData(mockClient as unknown as TrainingPeaksClient, {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      });
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual([mockFitnessMetrics]);
+      expect(mockClient.getFitnessData).toHaveBeenCalledWith('2024-01-01', '2024-01-31');
+    });
+  });
+
+  describe('getCurrentFitness', () => {
+    it('should return current fitness as JSON', async () => {
+      const result = await getCurrentFitness(mockClient as unknown as TrainingPeaksClient);
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(mockFitnessMetrics);
+      expect(mockClient.getCurrentFitness).toHaveBeenCalledOnce();
+    });
+  });
+});
