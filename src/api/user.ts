@@ -7,15 +7,19 @@ interface UserApiResponse {
     firstName: string;
     lastName: string;
     email: string;
-    dateOfBirth?: string;
+    birthday?: string;
     gender?: string;
-    countryCode?: string;
-    timezone?: string;
+    country?: string;
+    timeZone?: string;
+    settings?: {
+      account?: {
+        isPremium?: boolean;
+      };
+    };
+    athletes?: Array<{
+      athleteId: number;
+    }>;
   };
-  athletes: Array<{
-    athleteId: number;
-    isPremium?: boolean;
-  }>;
 }
 
 export class UserApi {
@@ -38,18 +42,18 @@ export class UserApi {
       throw new Error('Invalid response from user API');
     }
 
-    const athletes = response.athletes || [];
+    const athletes = response.user.athletes || [];
     const user: User = {
       id: response.user.userId,
       athleteId: athletes[0]?.athleteId ?? response.user.userId,
       email: response.user.email,
       firstName: response.user.firstName,
       lastName: response.user.lastName,
-      dateOfBirth: response.user.dateOfBirth,
+      dateOfBirth: response.user.birthday,
       gender: response.user.gender,
-      countryCode: response.user.countryCode,
-      timezone: response.user.timezone,
-      isPremium: athletes[0]?.isPremium,
+      countryCode: response.user.country,
+      timezone: response.user.timeZone,
+      isPremium: response.user.settings?.account?.isPremium,
     };
 
     this.cachedUser = user;
