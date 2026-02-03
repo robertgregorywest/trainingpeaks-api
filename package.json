@@ -34,7 +34,8 @@
     "prepublishOnly": "npm run build",
     "explore": "tsx scripts/explore.ts",
     "explore:workouts": "tsx scripts/explore-workouts.ts",
-    "explore:fitness": "tsx scripts/explore-fitness.ts"
+    "explore:fitness": "tsx scripts/explore-fitness.ts",
+    "explore:strength": "tsx scripts/explore-strength.ts"
   },
   "keywords": [
     "trainingpeaks",
