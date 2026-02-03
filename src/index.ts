@@ -10,6 +10,7 @@ import type {
   User,
   WorkoutSummary,
   WorkoutDetail,
+  StrengthWorkoutSummary,
   FitnessMetrics,
   PeakSport,
   PeakType,
@@ -77,6 +78,13 @@ export class TrainingPeaksClient {
     return this.workoutsApi.getWorkoutDetails(workoutId);
   }
 
+  async getStrengthWorkouts(
+    startDate: string,
+    endDate: string
+  ): Promise<StrengthWorkoutSummary[]> {
+    return this.workoutsApi.getStrengthWorkouts(startDate, endDate);
+  }
+
   // File methods
   async downloadFitFile(workoutId: number): Promise<Buffer> {
     return this.filesApi.downloadFitFile(workoutId);
@@ -136,6 +144,8 @@ export type {
   User,
   WorkoutSummary,
   WorkoutDetail,
+  StrengthWorkoutSummary,
+  StrengthExerciseSummary,
   WorkoutMetrics,
   WorkoutInterval,
   WorkoutLap,

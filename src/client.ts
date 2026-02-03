@@ -17,10 +17,14 @@ export class HttpClient {
   }
 
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+    return this.requestWithBase<T>(this.config.baseUrl, endpoint, options);
+  }
+
+  async requestWithBase<T>(baseUrl: string, endpoint: string, options: RequestOptions = {}): Promise<T> {
     await this.enforceRateLimit();
 
     const token = await this.getValidToken();
-    const url = `${this.config.baseUrl}${endpoint}`;
+    const url = `${baseUrl}${endpoint}`;
 
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
@@ -62,7 +66,7 @@ export class HttpClient {
       // Rate limited, wait and retry
       const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
       await this.sleep(retryAfter * 1000);
-      return this.request<T>(endpoint, options);
+      return this.requestWithBase<T>(baseUrl, endpoint, options);
     }
 
     if (!response.ok) {

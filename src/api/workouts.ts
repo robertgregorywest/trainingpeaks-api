@@ -4,7 +4,10 @@ import type {
   WorkoutSummary,
   WorkoutDetail,
   GetWorkoutsOptions,
+  StrengthWorkoutSummary,
 } from '../types.js';
+
+const PEAKSWARE_API_BASE = 'https://api.peakswaresb.com';
 
 const MAX_DATE_RANGE_DAYS = 90;
 
@@ -67,6 +70,51 @@ export class WorkoutsApi {
     const endpoint = `/fitness/v6/athletes/${athleteId}/workouts/${workoutId}`;
     const response = await this.client.request<WorkoutApiResponse>(endpoint);
     return this.mapWorkoutDetailResponse(response);
+  }
+
+  async getStrengthWorkouts(
+    startDate: string,
+    endDate: string
+  ): Promise<StrengthWorkoutSummary[]> {
+    const athleteId = await this.userApi.getAthleteId();
+    const endpoint = `/rx/activity/v1/workouts/calendar/${athleteId}/${startDate}/${endDate}`;
+    const response = await this.client.requestWithBase<StrengthWorkoutApiResponse[]>(
+      PEAKSWARE_API_BASE,
+      endpoint
+    );
+    return response.map((w) => this.mapStrengthWorkoutResponse(w, athleteId));
+  }
+
+  private mapStrengthWorkoutResponse(
+    w: StrengthWorkoutApiResponse,
+    athleteId: number
+  ): StrengthWorkoutSummary {
+    return {
+      workoutId: w.id,
+      athleteId,
+      title: w.title,
+      workoutDay: w.prescribedDate,
+      workoutType: 'StructuredStrength',
+      completedDate: w.completedDateTime ?? undefined,
+      totalTime: w.executedDurationInSeconds
+        ? w.executedDurationInSeconds / 3600
+        : undefined,
+      instructions: w.instructions ?? undefined,
+      totalBlocks: w.totalBlocks,
+      completedBlocks: w.completedBlocks,
+      totalSets: w.totalSets,
+      completedSets: w.completedSets,
+      compliancePercent: w.compliancePercent,
+      rpe: w.rpe ?? undefined,
+      feel: w.feel ?? undefined,
+      exercises: w.sequenceSummary.map((s) => ({
+        sequenceOrder: s.sequenceOrder,
+        title: s.title,
+        compliancePercent: s.compliancePercent,
+      })),
+      isLocked: w.isLocked,
+      isHidden: w.isHidden,
+    };
   }
 
   private mapWorkoutResponse(w: WorkoutApiResponse): WorkoutSummary {
@@ -210,6 +258,42 @@ interface WorkoutApiResponse {
     fileName: string;
     fileType: string;
     fileSize?: number;
+  }>;
+}
+
+// Peaksware API response types for strength workouts
+interface StrengthWorkoutApiResponse {
+  id: string;
+  calendarId: number;
+  title: string;
+  prescribedDate: string;
+  prescribedStartTime: string | null;
+  startDateTime: string | null;
+  completedDateTime: string | null;
+  lastUpdatedAt: string;
+  instructions: string | null;
+  prescribedDurationInSeconds: number | null;
+  executedDurationInSeconds: number | null;
+  orderOnDay: number | null;
+  totalBlocks: number;
+  completedBlocks: number;
+  totalPrescriptions: number;
+  completedPrescriptions: number;
+  totalSets: number;
+  completedSets: number;
+  compliancePercent: number;
+  rpe: number | null;
+  feel: number | null;
+  workoutType: string;
+  workoutSubTypeId: number | null;
+  isLocked: boolean;
+  isHidden: boolean;
+  totalComments: number;
+  hasPrivateWorkoutNoteForCaller: boolean;
+  sequenceSummary: Array<{
+    sequenceOrder: string;
+    title: string;
+    compliancePercent: number;
   }>;
 }
 

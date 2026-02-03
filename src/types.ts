@@ -122,6 +122,34 @@ export interface ZoneData {
   percentInZone?: number;
 }
 
+// Strength Workout (from Peaksware API)
+export interface StrengthWorkoutSummary {
+  workoutId: string;
+  athleteId: number;
+  title: string;
+  workoutDay: string;
+  workoutType: 'StructuredStrength';
+  completedDate?: string;
+  totalTime?: number;
+  instructions?: string;
+  totalBlocks: number;
+  completedBlocks: number;
+  totalSets: number;
+  completedSets: number;
+  compliancePercent: number;
+  rpe?: number;
+  feel?: number;
+  exercises: StrengthExerciseSummary[];
+  isLocked: boolean;
+  isHidden: boolean;
+}
+
+export interface StrengthExerciseSummary {
+  sequenceOrder: string;
+  title: string;
+  compliancePercent: number;
+}
+
 // Fitness Metrics (CTL/ATL/TSB)
 export interface FitnessMetrics {
   date: string;
