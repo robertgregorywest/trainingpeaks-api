@@ -29,7 +29,7 @@ export class FitnessApi {
     const endpoint = `/fitness/v1/athletes/${athleteId}/reporting/performancedata/${startDate}/${endDate}`;
     const response = await this.client.request<FitnessDataResponse>(endpoint, {
       method: 'POST',
-      body: { types: ['ctl', 'atl', 'tsb', 'tss'] },
+      body: { atlConstant: 7, atlStart: 0, ctlConstant: 42, ctlStart: 0, workoutTypes: [] },
     });
 
     // Handle different response structures
