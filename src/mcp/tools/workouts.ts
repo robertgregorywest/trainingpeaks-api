@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { TrainingPeaksClient } from '../../index.js';
 import type { WorkoutDetail, WorkoutLap } from '../../types.js';
+import { Decoder, Stream } from '@garmin/fitsdk';
 
 export const getWorkoutsSchema = z.object({
   startDate: z.string().describe('Start date in YYYY-MM-DD format'),
@@ -154,18 +155,61 @@ function buildSummary(
   };
 }
 
+export function parseLapsFromFit(buffer: Buffer): WorkoutLap[] {
+  const stream = Stream.fromBuffer(buffer);
+  const decoder = new Decoder(stream);
+
+  if (!decoder.isFIT() || !decoder.checkIntegrity()) {
+    return [];
+  }
+
+  const { messages } = decoder.read();
+  const lapMesgs = messages.lapMesgs;
+  if (!lapMesgs || lapMesgs.length === 0) {
+    return [];
+  }
+
+  return lapMesgs.map((lap: Record<string, unknown>, i: number) => ({
+    lapNumber: i + 1,
+    duration: lap.totalElapsedTime as number | undefined,
+    distance: lap.totalDistance as number | undefined,
+    averageHeartRate: lap.avgHeartRate as number | undefined,
+    maxHeartRate: lap.maxHeartRate as number | undefined,
+    averagePower: lap.avgPower as number | undefined,
+    maxPower: lap.maxPower as number | undefined,
+  }));
+}
+
 export async function compareIntervals(
   client: TrainingPeaksClient,
   args: z.infer<typeof compareIntervalsSchema>
 ): Promise<string> {
-  const details = await Promise.all(
-    args.workoutIds.map((id) => client.getWorkoutDetails(id))
+  // Fetch details + FIT files in parallel for each workout
+  const fetches = await Promise.all(
+    args.workoutIds.map(async (id) => {
+      const [detail, fitBuffer] = await Promise.all([
+        client.getWorkoutDetails(id),
+        client.downloadFitFile(id).catch(() => null),
+      ]);
+      return { detail, fitBuffer };
+    })
   );
 
-  const workoutLaps: { detail: WorkoutDetail; laps: WorkoutLap[] }[] = details.map((detail) => ({
-    detail,
-    laps: filterLaps(detail.laps ?? [], args),
-  }));
+  const warnings: string[] = [];
+
+  const workoutLaps: { detail: WorkoutDetail; laps: WorkoutLap[] }[] = fetches.map(({ detail, fitBuffer }) => {
+    let laps: WorkoutLap[];
+    if (fitBuffer) {
+      laps = parseLapsFromFit(fitBuffer);
+      if (laps.length === 0) {
+        warnings.push(`Workout ${detail.workoutId} (${detail.title ?? 'Untitled'}): FIT file contains no laps`);
+      }
+    } else {
+      laps = [];
+      warnings.push(`Workout ${detail.workoutId} (${detail.title ?? 'Untitled'}): no FIT file available`);
+    }
+    return { detail, laps: filterLaps(laps, args) };
+  });
 
   // Align laps side-by-side
   const maxLaps = Math.max(...workoutLaps.map((w) => w.laps.length), 0);
@@ -187,13 +231,6 @@ export async function compareIntervals(
   }
 
   const summaries = workoutLaps.map((w) => buildSummary(w.detail, w.laps));
-
-  const warnings: string[] = [];
-  for (const w of workoutLaps) {
-    if ((w.detail.laps ?? []).length === 0) {
-      warnings.push(`Workout ${w.detail.workoutId} (${w.detail.title ?? 'Untitled'}) has no laps`);
-    }
-  }
 
   const result: Record<string, unknown> = { laps, summaries };
   if (warnings.length > 0) {
