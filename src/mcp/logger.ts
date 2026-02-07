@@ -95,11 +95,12 @@ function summarizeResponse(toolName: string, data: unknown): string {
       case 'download_attachment':
         return `${COLORS.magenta}${parsed.filePath}${COLORS.reset} (${formatBytes(parsed.size)})`;
 
-      case 'parse_fit_file':
+      case 'parse_fit_file': {
         const sessions = parsed.sessions?.length || 0;
         const laps = parsed.laps?.length || 0;
         const records = parsed.recordCount || 0;
         return `${sessions} sessions, ${laps} laps, ${COLORS.magenta}${records} records${COLORS.reset}`;
+      }
     }
 
     return COLORS.dim + 'OK' + COLORS.reset;
