@@ -13,9 +13,13 @@ import {
   getWorkoutsSchema,
   getWorkoutSchema,
   getWorkoutDetailsSchema,
+  searchWorkoutsSchema,
+  compareIntervalsSchema,
   getWorkouts,
   getWorkout,
   getWorkoutDetails,
+  searchWorkouts,
+  compareIntervals,
 } from './tools/workouts.js';
 
 import {
@@ -108,6 +112,20 @@ export function createMcpServer(client: TrainingPeaksClient): McpServer {
     'Get detailed workout data including metrics, intervals, laps, and zones',
     getWorkoutDetailsSchema.shape,
     withLogging('get_workout_details', (args) => getWorkoutDetails(client, args))
+  );
+
+  server.tool(
+    'search_workouts',
+    'Search for workouts by title (case-insensitive substring match) within a number of days',
+    searchWorkoutsSchema.shape,
+    withLogging('search_workouts', (args) => searchWorkouts(client, args))
+  );
+
+  server.tool(
+    'compare_intervals',
+    'Compare laps/intervals side-by-side across multiple workouts with optional power and duration filters',
+    compareIntervalsSchema.shape,
+    withLogging('compare_intervals', (args) => compareIntervals(client, args))
   );
 
   // File tools

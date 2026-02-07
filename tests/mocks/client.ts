@@ -127,6 +127,62 @@ export const mockPeakData: PeakData[] = [
   },
 ];
 
+export const mockWorkoutSummary2: WorkoutSummary = {
+  workoutId: 102,
+  athleteId: 12345,
+  title: 'Evening Ride',
+  workoutDay: '2024-01-20',
+  workoutType: 'Bike',
+  completedDate: '2024-01-20',
+  totalTime: 5400,
+  totalDistance: 60000,
+  tssActual: 110,
+  hasFile: true,
+};
+
+export const mockWorkoutSummary3: WorkoutSummary = {
+  workoutId: 103,
+  athleteId: 12345,
+  title: 'Morning Run',
+  workoutDay: '2024-01-18',
+  workoutType: 'Run',
+  completedDate: '2024-01-18',
+  totalTime: 2400,
+  totalDistance: 8000,
+  tssActual: 50,
+  hasFile: true,
+};
+
+export const mockWorkoutDetail2: WorkoutDetail = {
+  ...mockWorkoutSummary2,
+  metrics: {
+    averagePower: 210,
+    maxPower: 500,
+  },
+  laps: [
+    {
+      lapNumber: 1,
+      duration: 1800,
+      distance: 20000,
+      averagePower: 210,
+      maxPower: 420,
+    },
+    {
+      lapNumber: 2,
+      duration: 1800,
+      distance: 20000,
+      averagePower: 230,
+      maxPower: 480,
+    },
+  ],
+};
+
+export const mockWorkoutDetailNoLaps: WorkoutDetail = {
+  ...mockWorkoutSummary3,
+  metrics: {},
+  laps: [],
+};
+
 export const mockFitBuffer = Buffer.from('mock FIT file content');
 
 export function createMockClient() {
