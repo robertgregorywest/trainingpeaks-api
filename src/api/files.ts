@@ -1,5 +1,15 @@
+import { gunzipSync } from 'node:zlib';
 import type { HttpClient } from '../client.js';
 import type { UserApi } from './user.js';
+
+interface DeviceFileInfo {
+  fileId: string;
+  fileName: string;
+}
+
+interface WorkoutDetailsResponse {
+  workoutDeviceFileInfos?: DeviceFileInfo[];
+}
 
 export class FilesApi {
   private client: HttpClient;
@@ -10,10 +20,24 @@ export class FilesApi {
     this.userApi = userApi;
   }
 
-  async downloadFitFile(workoutId: number): Promise<Buffer> {
+  async downloadActivityFile(workoutId: number): Promise<Buffer | null> {
     const athleteId = await this.userApi.getAthleteId();
-    const endpoint = `/fitness/v6/athletes/${athleteId}/workouts/${workoutId}/fordevice/fit`;
-    return this.client.requestRaw(endpoint);
+    const detailsEndpoint = `/fitness/v6/athletes/${athleteId}/workouts/${workoutId}/details`;
+    const details = await this.client.request<WorkoutDetailsResponse>(detailsEndpoint);
+
+    const fileInfo = details.workoutDeviceFileInfos?.[0];
+    if (!fileInfo) {
+      return null;
+    }
+
+    const rawEndpoint = `/fitness/v6/athletes/${athleteId}/workouts/${workoutId}/rawfiledata/${fileInfo.fileId}`;
+    const buffer = await this.client.requestRaw(rawEndpoint);
+
+    if (fileInfo.fileName.endsWith('.gz')) {
+      return Buffer.from(gunzipSync(buffer));
+    }
+
+    return buffer;
   }
 
   async downloadAttachment(workoutId: number, attachmentId: number): Promise<Buffer> {

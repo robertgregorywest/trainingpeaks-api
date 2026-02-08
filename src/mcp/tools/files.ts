@@ -4,10 +4,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { TrainingPeaksClient } from '../../index.js';
 
-export const downloadFitFileSchema = z.object({
-  workoutId: z.number().describe('The workout ID'),
-});
-
 export const downloadAttachmentSchema = z.object({
   workoutId: z.number().describe('The workout ID'),
   attachmentId: z.number().describe('The attachment ID'),
@@ -16,26 +12,6 @@ export const downloadAttachmentSchema = z.object({
 export const parseFitFileSchema = z.object({
   filePath: z.string().describe('Path to the FIT file to parse'),
 });
-
-export async function downloadFitFile(
-  client: TrainingPeaksClient,
-  args: z.infer<typeof downloadFitFileSchema>
-): Promise<string> {
-  const buffer = await client.downloadFitFile(args.workoutId);
-  const tempDir = os.tmpdir();
-  const filePath = path.join(tempDir, `workout_${args.workoutId}.fit`);
-  await fs.writeFile(filePath, buffer);
-  return JSON.stringify(
-    {
-      success: true,
-      filePath,
-      size: buffer.length,
-      message: `FIT file saved to ${filePath}. Use parse_fit_file to extract structured data.`,
-    },
-    null,
-    2
-  );
-}
 
 export async function downloadAttachment(
   client: TrainingPeaksClient,

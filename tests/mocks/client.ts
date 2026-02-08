@@ -192,7 +192,7 @@ export function createMockClient() {
     getWorkouts: vi.fn().mockResolvedValue([mockWorkoutSummary]),
     getWorkout: vi.fn().mockResolvedValue(mockWorkoutSummary),
     getWorkoutDetails: vi.fn().mockResolvedValue(mockWorkoutDetail),
-    downloadFitFile: vi.fn().mockResolvedValue(mockFitBuffer),
+    downloadActivityFile: vi.fn().mockResolvedValue(mockFitBuffer),
     downloadAttachment: vi.fn().mockResolvedValue(mockFitBuffer),
     getFitnessData: vi.fn().mockResolvedValue([mockFitnessMetrics]),
     getCurrentFitness: vi.fn().mockResolvedValue(mockFitnessMetrics),

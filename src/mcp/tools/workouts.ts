@@ -189,7 +189,7 @@ export async function compareIntervals(
     args.workoutIds.map(async (id) => {
       const [detail, fitBuffer] = await Promise.all([
         client.getWorkoutDetails(id),
-        client.downloadFitFile(id).catch(() => null),
+        client.downloadActivityFile(id).catch(() => null),
       ]);
       return { detail, fitBuffer };
     })

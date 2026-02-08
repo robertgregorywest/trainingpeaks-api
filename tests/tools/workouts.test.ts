@@ -261,9 +261,9 @@ describe('workout tools', () => {
       expect(parsed.laps[1].values[0].avgPower).toBeUndefined();
       expect(parsed.laps[1].values[1].avgPower).toBe(230);
 
-      // Verify downloadFitFile was called for each workout
-      expect(mockClient.downloadFitFile).toHaveBeenCalledWith(100);
-      expect(mockClient.downloadFitFile).toHaveBeenCalledWith(102);
+      // Verify downloadActivityFile was called for each workout
+      expect(mockClient.downloadActivityFile).toHaveBeenCalledWith(100);
+      expect(mockClient.downloadActivityFile).toHaveBeenCalledWith(102);
     });
 
     it('should filter laps by minPower', async () => {
@@ -335,7 +335,7 @@ describe('workout tools', () => {
 
     it('should include warning when FIT download fails', async () => {
       mockClient.getWorkoutDetails.mockResolvedValueOnce(mockWorkoutDetailNoLaps);
-      mockClient.downloadFitFile.mockRejectedValueOnce(new Error('No file'));
+      mockClient.downloadActivityFile.mockRejectedValueOnce(new Error('No file'));
 
       const result = await compareIntervals(mockClient as unknown as TrainingPeaksClient, {
         workoutIds: [103],

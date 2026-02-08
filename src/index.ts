@@ -86,8 +86,8 @@ export class TrainingPeaksClient {
   }
 
   // File methods
-  async downloadFitFile(workoutId: number): Promise<Buffer> {
-    return this.filesApi.downloadFitFile(workoutId);
+  async downloadActivityFile(workoutId: number): Promise<Buffer | null> {
+    return this.filesApi.downloadActivityFile(workoutId);
   }
 
   async downloadAttachment(workoutId: number, attachmentId: number): Promise<Buffer> {

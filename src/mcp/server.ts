@@ -23,10 +23,8 @@ import {
 } from './tools/workouts.js';
 
 import {
-  downloadFitFileSchema,
   downloadAttachmentSchema,
   parseFitFileSchema,
-  downloadFitFile,
   downloadAttachment,
   parseFitFile,
 } from './tools/files.js';
@@ -129,13 +127,6 @@ export function createMcpServer(client: TrainingPeaksClient): McpServer {
   );
 
   // File tools
-  server.tool(
-    'download_fit_file',
-    'Download the FIT file for a workout. Returns the file path where it was saved.',
-    downloadFitFileSchema.shape,
-    withLogging('download_fit_file', (args) => downloadFitFile(client, args))
-  );
-
   server.tool(
     'download_attachment',
     'Download a workout attachment. Returns the file path where it was saved.',
