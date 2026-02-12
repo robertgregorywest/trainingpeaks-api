@@ -1,5 +1,6 @@
 {
   "manifest_version": "0.3",
+  "version": "0.3.0",
   "name": "trainingpeaks-mcp",
   "display_name": "TrainingPeaks",
   "description": "Access your TrainingPeaks training data — workouts, fitness metrics, peaks/PRs, and FIT files",
@@ -7,12 +8,17 @@
     "name": "Rob West",
     "email": "robertgregorywest@gmail.com"
   },
-  "repository": "https://github.com/robertgregorywest/trainingpeaks-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robertgregorywest/trainingpeaks-mcp"
+  },
   "license": "MIT",
   "server": {
     "type": "node",
     "entry_point": "dist/mcp/stdio.js",
     "mcp_config": {
+      "command": "node",
+      "args": ["dist/mcp/stdio.js"],
       "env": {
         "TP_USERNAME": "{{tp_username}}",
         "TP_PASSWORD": "{{tp_password}}"
@@ -22,11 +28,13 @@
   "user_config": {
     "tp_username": {
       "type": "string",
+      "title": "TrainingPeaks Username",
       "description": "Your TrainingPeaks email address",
       "required": true
     },
     "tp_password": {
       "type": "string",
+      "title": "TrainingPeaks Password",
       "description": "Your TrainingPeaks password",
       "required": true,
       "sensitive": true
