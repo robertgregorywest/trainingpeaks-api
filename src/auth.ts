@@ -17,6 +17,7 @@ export class AuthManager {
   }
 
   async authenticate(): Promise<string> {
+    console.error(`[trainingpeaks-mcp] Authenticating (user=${this.credentials.username}, pass length=${this.credentials.password.length})`);
     if (this.token && !this.isTokenExpired()) {
       return this.token.token;
     }

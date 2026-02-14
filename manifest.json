@@ -20,8 +20,8 @@
       "command": "node",
       "args": ["${__dirname}/dist/mcp/stdio.js"],
       "env": {
-        "TP_USERNAME": "{{tp_username}}",
-        "TP_PASSWORD": "{{tp_password}}"
+        "TP_USERNAME": "${user_config.tp_username}",
+        "TP_PASSWORD": "${user_config.tp_password}"
       }
     }
   },
