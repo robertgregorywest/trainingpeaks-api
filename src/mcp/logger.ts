@@ -21,9 +21,9 @@ export function logRequest(method: string, params?: Record<string, unknown>): vo
 
   if (method === 'tools/call' && params?.name) {
     const args = params.arguments ? JSON.stringify(params.arguments) : '{}';
-    console.log(`${ts} ${arrow} ${COLORS.cyan}${params.name}${COLORS.reset} ${COLORS.dim}${args}${COLORS.reset}`);
+    console.error(`${ts} ${arrow} ${COLORS.cyan}${params.name}${COLORS.reset} ${COLORS.dim}${args}${COLORS.reset}`);
   } else {
-    console.log(`${ts} ${arrow} ${COLORS.cyan}${method}${COLORS.reset}`);
+    console.error(`${ts} ${arrow} ${COLORS.cyan}${method}${COLORS.reset}`);
   }
 }
 
@@ -33,7 +33,7 @@ export function logResponse(toolName: string, data: unknown, durationMs: number)
   const duration = `${COLORS.dim}(${durationMs}ms)${COLORS.reset}`;
 
   const summary = summarizeResponse(toolName, data);
-  console.log(`${ts} ${arrow} ${COLORS.green}${toolName}${COLORS.reset} ${summary} ${duration}`);
+  console.error(`${ts} ${arrow} ${COLORS.green}${toolName}${COLORS.reset} ${summary} ${duration}`);
 }
 
 export function logError(toolName: string, error: Error, durationMs: number): void {
@@ -41,7 +41,7 @@ export function logError(toolName: string, error: Error, durationMs: number): vo
   const arrow = `${COLORS.yellow}✗${COLORS.reset}`;
   const duration = `${COLORS.dim}(${durationMs}ms)${COLORS.reset}`;
 
-  console.log(`${ts} ${arrow} ${COLORS.yellow}${toolName}${COLORS.reset} Error: ${error.message} ${duration}`);
+  console.error(`${ts} ${arrow} ${COLORS.yellow}${toolName}${COLORS.reset} Error: ${error.message} ${duration}`);
 }
 
 function summarizeResponse(toolName: string, data: unknown): string {
