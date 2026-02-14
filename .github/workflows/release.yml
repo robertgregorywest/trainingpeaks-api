@@ -37,8 +37,11 @@ jobs:
         id: bundle
         run: |
           BUNDLE=$(ls *.mcpb)
-          echo "file=$BUNDLE" >> "$GITHUB_OUTPUT"
-          SHA=$(shasum -a 256 "$BUNDLE" | cut -d ' ' -f 1)
+          VERSION=${GITHUB_REF_NAME#v}
+          VERSIONED="${BUNDLE%.mcpb}-${VERSION}.mcpb"
+          mv "$BUNDLE" "$VERSIONED"
+          echo "file=$VERSIONED" >> "$GITHUB_OUTPUT"
+          SHA=$(shasum -a 256 "$VERSIONED" | cut -d ' ' -f 1)
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
