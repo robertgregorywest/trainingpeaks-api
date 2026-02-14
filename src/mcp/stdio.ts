@@ -1,11 +1,10 @@
 #!/usr/bin/env node
+import 'dotenv/config';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { TrainingPeaksClient } from '../index.js';
 import { createMcpServer } from './server.js';
 
 async function main() {
-  console.error('[trainingpeaks-mcp] Starting...');
-
   let client: TrainingPeaksClient;
   try {
     client = new TrainingPeaksClient();
@@ -28,7 +27,6 @@ async function main() {
   });
 
   await server.connect(transport);
-  console.error('[trainingpeaks-mcp] Server connected.');
 }
 
 main().catch((error) => {

@@ -15,10 +15,10 @@
   "license": "MIT",
   "server": {
     "type": "node",
-    "entry_point": "dist/mcp/stdio-wrapper.cjs",
+    "entry_point": "dist/mcp/stdio.js",
     "mcp_config": {
       "command": "node",
-      "args": ["dist/mcp/stdio-wrapper.cjs"],
+      "args": ["${__dirname}/dist/mcp/stdio.js"],
       "env": {
         "TP_USERNAME": "{{tp_username}}",
         "TP_PASSWORD": "{{tp_password}}"
