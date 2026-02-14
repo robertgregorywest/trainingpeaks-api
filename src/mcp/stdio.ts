@@ -1,22 +1,31 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { TrainingPeaksClient } from '../index.js';
 import { createMcpServer } from './server.js';
 
-function ensurePlaywrightChromium(): void {
+const execAsync = promisify(exec);
+
+async function ensurePlaywrightChromium(): Promise<void> {
   console.error('[trainingpeaks-mcp] Ensuring Playwright Chromium is installed...');
   try {
-    execSync('npx playwright install chromium', { stdio: 'ignore' });
+    await execAsync('npx playwright install chromium');
   } catch (error) {
     console.error('[trainingpeaks-mcp] Warning: Failed to install Chromium:', error);
   }
 }
 
 async function main() {
-  ensurePlaywrightChromium();
-  const client = new TrainingPeaksClient();
+  let client: TrainingPeaksClient;
+  try {
+    client = new TrainingPeaksClient();
+  } catch (error) {
+    console.error('[trainingpeaks-mcp] Failed to create client:', error);
+    process.exit(1);
+  }
+
   const server = createMcpServer(client);
   const transport = new StdioServerTransport();
 
@@ -31,7 +40,12 @@ async function main() {
     process.exit(0);
   });
 
+  console.error('[trainingpeaks-mcp] Connecting stdio transport...');
   await server.connect(transport);
+  console.error('[trainingpeaks-mcp] Server connected.');
+
+  // Install Playwright Chromium async after transport is live
+  await ensurePlaywrightChromium();
 }
 
 main().catch((error) => {
