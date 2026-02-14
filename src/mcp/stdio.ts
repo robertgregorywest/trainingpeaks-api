@@ -1,4 +1,15 @@
 #!/usr/bin/env node
+
+// Catch any uncaught errors so they appear in Claude Desktop logs
+process.on('uncaughtException', (error) => {
+  console.error('[trainingpeaks-mcp] Uncaught exception:', error);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[trainingpeaks-mcp] Unhandled rejection:', reason);
+  process.exit(1);
+});
+
 import 'dotenv/config';
 import { spawn } from 'child_process';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';

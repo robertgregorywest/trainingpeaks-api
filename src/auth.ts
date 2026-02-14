@@ -1,4 +1,4 @@
-import { chromium, Browser, BrowserContext } from 'playwright';
+import type { Browser, BrowserContext } from 'playwright';
 import type { AuthCredentials, AuthToken } from './types.js';
 
 const LOGIN_URL = 'https://home.trainingpeaks.com/login';
@@ -21,6 +21,7 @@ export class AuthManager {
       return this.token.token;
     }
 
+    const { chromium } = await import('playwright');
     this.browser = await chromium.launch({ headless: this.headless });
     this.context = await this.browser.newContext();
     const page = await this.context.newPage();
