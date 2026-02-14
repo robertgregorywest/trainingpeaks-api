@@ -3,6 +3,19 @@ import type { TrainingPeaksClient } from '../../index.js';
 import type { WorkoutDetail, WorkoutLap } from '../../types.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
 
+export const getStrengthWorkoutsSchema = z.object({
+  startDate: z.string().describe('Start date in YYYY-MM-DD format'),
+  endDate: z.string().describe('End date in YYYY-MM-DD format'),
+});
+
+export async function getStrengthWorkouts(
+  client: TrainingPeaksClient,
+  args: z.infer<typeof getStrengthWorkoutsSchema>
+): Promise<string> {
+  const workouts = await client.getStrengthWorkouts(args.startDate, args.endDate);
+  return JSON.stringify(workouts, null, 2);
+}
+
 export const getWorkoutsSchema = z.object({
   startDate: z.string().describe('Start date in YYYY-MM-DD format'),
   endDate: z.string().describe('End date in YYYY-MM-DD format'),

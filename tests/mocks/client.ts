@@ -3,6 +3,7 @@ import type {
   User,
   WorkoutSummary,
   WorkoutDetail,
+  StrengthWorkoutSummary,
   FitnessMetrics,
   PeaksResponse,
   WorkoutPeaks,
@@ -183,6 +184,27 @@ export const mockWorkoutDetailNoLaps: WorkoutDetail = {
   laps: [],
 };
 
+export const mockStrengthWorkoutSummary: StrengthWorkoutSummary = {
+  workoutId: 'abc-123',
+  athleteId: 12345,
+  title: 'Upper Body Strength',
+  workoutDay: '2024-01-17',
+  workoutType: 'StructuredStrength',
+  completedDate: '2024-01-17',
+  totalTime: 3600,
+  totalBlocks: 4,
+  completedBlocks: 4,
+  totalSets: 12,
+  completedSets: 10,
+  compliancePercent: 83,
+  exercises: [
+    { sequenceOrder: '1', title: 'Bench Press', compliancePercent: 100 },
+    { sequenceOrder: '2', title: 'Pull Ups', compliancePercent: 75 },
+  ],
+  isLocked: false,
+  isHidden: false,
+};
+
 export const mockFitBuffer = Buffer.from('mock FIT file content');
 
 export function createMockClient() {
@@ -201,6 +223,7 @@ export function createMockClient() {
     getWorkoutPeaks: vi.fn().mockResolvedValue(mockWorkoutPeaks),
     getPowerPeaks: vi.fn().mockResolvedValue(mockPeakData),
     getRunningPeaks: vi.fn().mockResolvedValue(mockPeakData),
+    getStrengthWorkouts: vi.fn().mockResolvedValue([mockStrengthWorkoutSummary]),
     close: vi.fn().mockResolvedValue(undefined),
   };
 }

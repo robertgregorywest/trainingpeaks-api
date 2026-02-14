@@ -6,6 +6,7 @@ import {
   searchWorkouts,
   compareIntervals,
   parseLapsFromFit,
+  getStrengthWorkouts,
 } from '../../src/mcp/tools/workouts.js';
 import {
   createMockClient,
@@ -13,6 +14,7 @@ import {
   mockWorkoutSummary2,
   mockWorkoutSummary3,
   mockStrengthWorkout,
+  mockStrengthWorkoutSummary,
   mockWorkoutDetail,
   mockWorkoutDetail2,
   mockWorkoutDetailNoLaps,
@@ -105,6 +107,28 @@ describe('workout tools', () => {
 
       expect(parsed).toEqual(mockWorkoutDetail);
       expect(mockClient.getWorkoutDetails).toHaveBeenCalledWith(100);
+    });
+  });
+
+  describe('getStrengthWorkouts', () => {
+    it('should return strength workouts as JSON', async () => {
+      const result = await getStrengthWorkouts(mockClient as unknown as TrainingPeaksClient, {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      });
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual([mockStrengthWorkoutSummary]);
+      expect(mockClient.getStrengthWorkouts).toHaveBeenCalledWith('2024-01-01', '2024-01-31');
+    });
+
+    it('should pass date args through to client', async () => {
+      await getStrengthWorkouts(mockClient as unknown as TrainingPeaksClient, {
+        startDate: '2024-06-01',
+        endDate: '2024-06-30',
+      });
+
+      expect(mockClient.getStrengthWorkouts).toHaveBeenCalledWith('2024-06-01', '2024-06-30');
     });
   });
 

@@ -15,11 +15,13 @@ import {
   getWorkoutDetailsSchema,
   searchWorkoutsSchema,
   compareIntervalsSchema,
+  getStrengthWorkoutsSchema,
   getWorkouts,
   getWorkout,
   getWorkoutDetails,
   searchWorkouts,
   compareIntervals,
+  getStrengthWorkouts,
 } from './tools/workouts.js';
 
 import {
@@ -124,6 +126,13 @@ export function createMcpServer(client: TrainingPeaksClient): McpServer {
     'Compare laps/intervals side-by-side across multiple workouts with optional power and duration filters',
     compareIntervalsSchema.shape,
     withLogging('compare_intervals', (args) => compareIntervals(client, args))
+  );
+
+  server.tool(
+    'get_strength_workouts',
+    'Get strength workouts within a date range (sets, blocks, exercises, compliance)',
+    getStrengthWorkoutsSchema.shape,
+    withLogging('get_strength_workouts', (args) => getStrengthWorkouts(client, args))
   );
 
   // File tools
