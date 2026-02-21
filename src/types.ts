@@ -163,49 +163,45 @@ export interface FitnessMetrics {
 export type PeakSport = 'Bike' | 'Run';
 export type PeakType =
   | 'power5sec'
-  | 'power10sec'
-  | 'power20sec'
-  | 'power30sec'
   | 'power1min'
-  | 'power2min'
   | 'power5min'
   | 'power10min'
   | 'power20min'
-  | 'power30min'
   | 'power60min'
   | 'power90min'
-  | 'speed400m'
-  | 'speed800m'
+  | 'hR5sec'
+  | 'hR1min'
+  | 'hR5min'
+  | 'hR10min'
+  | 'hR20min'
+  | 'hR60min'
+  | 'hR90min'
+  | 'speed400Meter'
+  | 'speed800Meter'
   | 'speed1K'
-  | 'speed1mi'
-  | 'speed2K'
+  | 'speed1Mi'
   | 'speed5K'
+  | 'speed5Mi'
   | 'speed10K'
-  | 'speed15K'
-  | 'speed20K'
-  | 'speedHM'
-  | 'speed25K'
-  | 'speed30K'
-  | 'speedM'
+  | 'speed10Mi'
+  | 'speedHalfMarathon'
+  | 'speedMarathon'
   | 'speed50K';
 
 export interface PeakData {
-  type: PeakType;
+  type: string;
   value: number;
-  unit: string;
   workoutId?: number;
   workoutDate?: string;
   workoutTitle?: string;
-}
-
-export interface PeaksResponse {
-  sport: PeakSport;
-  peaks: PeakData[];
+  rank?: number;
+  eventName?: string;
 }
 
 export interface WorkoutPeaks {
   workoutId: number;
-  peaks: PeakData[];
+  personalRecordCount: number;
+  personalRecords: PeakData[];
 }
 
 // Power Duration Curve
@@ -235,7 +231,6 @@ export interface GetWorkoutsOptions {
 export interface GetPeaksOptions {
   startDate?: string;
   endDate?: string;
-  limit?: number;
 }
 
 // Client Options

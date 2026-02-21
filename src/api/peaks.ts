@@ -4,28 +4,43 @@ import type {
   PeakSport,
   PeakType,
   PeakData,
-  PeaksResponse,
   WorkoutPeaks,
   GetPeaksOptions,
 } from '../types.js';
 
-interface PeaksApiResponse {
-  peaks: Array<{
-    type: string;
-    value: number;
-    unit: string;
-    workoutId?: number;
-    workoutDate?: string;
-    workoutTitle?: string;
-  }>;
+interface PeaksApiRecord {
+  id: number;
+  athleteId: number;
+  workoutId: number;
+  workoutDate: string;
+  workoutTypeId: number;
+  workoutTitle: string;
+  class: string;
+  type: string;
+  timeFrame: string;
+  value: number;
+  invalid: boolean;
+  rank: number;
+  eventName: string;
 }
 
 interface WorkoutPeaksApiResponse {
-  peaks: Array<{
-    type: string;
-    value: number;
-    unit: string;
-  }>;
+  calcsPending: boolean;
+  workoutId: number;
+  personalRecordCount: number;
+  personalRecords: PeaksApiRecord[];
+}
+
+function mapRecord(r: PeaksApiRecord): PeakData {
+  return {
+    type: r.type,
+    value: r.value,
+    workoutId: r.workoutId,
+    workoutDate: r.workoutDate,
+    workoutTitle: r.workoutTitle,
+    rank: r.rank,
+    eventName: r.eventName,
+  };
 }
 
 export class PeaksApi {
@@ -41,91 +56,35 @@ export class PeaksApi {
     sport: PeakSport,
     type: PeakType,
     options: GetPeaksOptions = {}
-  ): Promise<PeaksResponse> {
+  ): Promise<PeakData[]> {
     const athleteId = await this.userApi.getAthleteId();
 
     const params = new URLSearchParams();
-    params.set('sport', sport);
-    params.set('type', type);
+    params.set('prType', type);
 
     if (options.startDate) {
-      params.set('startDate', options.startDate);
+      params.set('startDate', `${options.startDate}T00:00:00`);
     }
     if (options.endDate) {
-      params.set('endDate', options.endDate);
-    }
-    if (options.limit) {
-      params.set('limit', options.limit.toString());
+      params.set('endDate', `${options.endDate}T00:00:00`);
     }
 
-    const endpoint = `/fitness/v1/athletes/${athleteId}/peaks?${params.toString()}`;
-    const response = await this.client.request<PeaksApiResponse>(endpoint);
+    const endpoint = `/personalrecord/v2/athletes/${athleteId}/${sport}?${params.toString()}`;
+    const response = await this.client.request<PeaksApiRecord[]>(endpoint);
 
-    return {
-      sport,
-      peaks: response.peaks.map((p) => ({
-        type: p.type as PeakType,
-        value: p.value,
-        unit: p.unit,
-        workoutId: p.workoutId,
-        workoutDate: p.workoutDate,
-        workoutTitle: p.workoutTitle,
-      })),
-    };
-  }
-
-  async getAllPeaks(sport: PeakSport, options: GetPeaksOptions = {}): Promise<PeaksResponse> {
-    const athleteId = await this.userApi.getAthleteId();
-
-    const params = new URLSearchParams();
-    params.set('sport', sport);
-
-    if (options.startDate) {
-      params.set('startDate', options.startDate);
-    }
-    if (options.endDate) {
-      params.set('endDate', options.endDate);
-    }
-
-    const endpoint = `/fitness/v1/athletes/${athleteId}/peaks/all?${params.toString()}`;
-    const response = await this.client.request<PeaksApiResponse>(endpoint);
-
-    return {
-      sport,
-      peaks: response.peaks.map((p) => ({
-        type: p.type as PeakType,
-        value: p.value,
-        unit: p.unit,
-        workoutId: p.workoutId,
-        workoutDate: p.workoutDate,
-        workoutTitle: p.workoutTitle,
-      })),
-    };
+    return response.map(mapRecord);
   }
 
   async getWorkoutPeaks(workoutId: number): Promise<WorkoutPeaks> {
     const athleteId = await this.userApi.getAthleteId();
-    const endpoint = `/fitness/v1/athletes/${athleteId}/workouts/${workoutId}/peaks`;
+    const endpoint = `/personalrecord/v2/athletes/${athleteId}/workouts/${workoutId}?displayPeaksForBasic=true`;
     const response = await this.client.request<WorkoutPeaksApiResponse>(endpoint);
 
     return {
-      workoutId,
-      peaks: response.peaks.map((p) => ({
-        type: p.type as PeakType,
-        value: p.value,
-        unit: p.unit,
-      })),
+      workoutId: response.workoutId,
+      personalRecordCount: response.personalRecordCount,
+      personalRecords: response.personalRecords.map(mapRecord),
     };
-  }
-
-  async getPowerPeaks(options: GetPeaksOptions = {}): Promise<PeakData[]> {
-    const response = await this.getAllPeaks('Bike', options);
-    return response.peaks.filter((p) => p.type.startsWith('power'));
-  }
-
-  async getRunningPeaks(options: GetPeaksOptions = {}): Promise<PeakData[]> {
-    const response = await this.getAllPeaks('Run', options);
-    return response.peaks.filter((p) => p.type.startsWith('speed'));
   }
 }
 

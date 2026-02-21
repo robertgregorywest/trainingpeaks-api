@@ -18,7 +18,7 @@ import type {
   FitnessMetrics,
   PeakSport,
   PeakType,
-  PeaksResponse,
+  PeakData,
   WorkoutPeaks,
   GetWorkoutsOptions,
   GetPeaksOptions,
@@ -113,24 +113,12 @@ export class TrainingPeaksClient {
     sport: PeakSport,
     type: PeakType,
     options?: GetPeaksOptions
-  ): Promise<PeaksResponse> {
+  ): Promise<PeakData[]> {
     return this.peaksApi.getPeaks(sport, type, options);
-  }
-
-  async getAllPeaks(sport: PeakSport, options?: GetPeaksOptions): Promise<PeaksResponse> {
-    return this.peaksApi.getAllPeaks(sport, options);
   }
 
   async getWorkoutPeaks(workoutId: number): Promise<WorkoutPeaks> {
     return this.peaksApi.getWorkoutPeaks(workoutId);
-  }
-
-  async getPowerPeaks(options?: GetPeaksOptions): Promise<import('./types.js').PeakData[]> {
-    return this.peaksApi.getPowerPeaks(options);
-  }
-
-  async getRunningPeaks(options?: GetPeaksOptions): Promise<import('./types.js').PeakData[]> {
-    return this.peaksApi.getRunningPeaks(options);
   }
 
   // Power analysis
@@ -166,7 +154,6 @@ export type {
   PeakSport,
   PeakType,
   PeakData,
-  PeaksResponse,
   WorkoutPeaks,
   GetWorkoutsOptions,
   GetPeaksOptions,

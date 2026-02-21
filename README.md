@@ -4,7 +4,7 @@ An MCP (Model Context Protocol) server for accessing your TrainingPeaks training
 
 ## Features
 
-- **20 tools** for accessing workouts, strength workouts, fitness metrics, peaks/PRs, power analysis, files, and date resolution
+- **17 tools** for accessing workouts, strength workouts, fitness metrics, peaks/PRs, power analysis, files, and date resolution
 - **Dual transport**: stdio for Claude Desktop, HTTP for ChatGPT
 - **FIT file parsing**: Extract structured data from downloaded FIT files
 - Also usable as a standalone TypeScript library
@@ -121,10 +121,7 @@ Requires **Node.js 20+**.
 | `get_fitness_data` | Get CTL/ATL/TSB for date range |
 | `get_current_fitness` | Get today's fitness metrics |
 | `get_peaks` | Get peaks for specific sport and type |
-| `get_all_peaks` | Get all peaks for a sport |
 | `get_workout_peaks` | Get PRs from specific workout |
-| `get_power_peaks` | Get cycling power PRs |
-| `get_running_peaks` | Get running pace PRs |
 | `get_best_power` | Compute best power from raw FIT file for arbitrary durations (e.g., 3min, 8min, 45min) |
 | `get_power_duration_curve` | Build a power-duration curve across cycling workouts in a date range |
 | `get_current_date` | Get current date in ISO, US, EU, or custom format |
@@ -219,7 +216,7 @@ npm run test:integration
 - User API: `getUser`, `getAthleteId`
 - Workouts API: `getWorkouts`, `getWorkout`, `getWorkoutDetails`
 - Fitness API: `getCurrentFitness`, `getFitnessData`
-- Peaks API: `getAllPeaks`, `getPeaks`, `getWorkoutPeaks`, `getPowerPeaks`, `getRunningPeaks`
+- Peaks API: `getPeaks`, `getWorkoutPeaks`
 - Files API: `downloadActivityFile`
 
 Tests are skipped automatically if credentials are not available.

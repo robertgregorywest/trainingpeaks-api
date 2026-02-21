@@ -5,7 +5,6 @@ import type {
   WorkoutDetail,
   StrengthWorkoutSummary,
   FitnessMetrics,
-  PeaksResponse,
   WorkoutPeaks,
   PeakData,
 } from '../../src/types.js';
@@ -93,40 +92,33 @@ export const mockFitnessMetrics: FitnessMetrics = {
   dailyTss: 75,
 };
 
-export const mockPeaksResponse: PeaksResponse = {
-  sport: 'Bike',
-  peaks: [
-    {
-      type: 'power5min',
-      value: 320,
-      unit: 'watts',
-      workoutId: 100,
-      workoutDate: '2024-01-15',
-      workoutTitle: 'Morning Ride',
-    },
-  ],
-};
+export const mockPeakData: PeakData[] = [
+  {
+    type: 'Pr5Minutes',
+    value: 320,
+    workoutId: 100,
+    workoutDate: '2024-01-15',
+    workoutTitle: 'Morning Ride',
+    rank: 0,
+    eventName: '',
+  },
+];
 
 export const mockWorkoutPeaks: WorkoutPeaks = {
   workoutId: 100,
-  peaks: [
+  personalRecordCount: 1,
+  personalRecords: [
     {
-      type: 'power5min',
+      type: 'Pr5Minutes',
       value: 320,
-      unit: 'watts',
+      workoutId: 100,
+      workoutDate: '2024-01-15',
+      workoutTitle: 'Morning Ride',
+      rank: 0,
+      eventName: '',
     },
   ],
 };
-
-export const mockPeakData: PeakData[] = [
-  {
-    type: 'power5min',
-    value: 320,
-    unit: 'watts',
-    workoutId: 100,
-    workoutDate: '2024-01-15',
-  },
-];
 
 export const mockWorkoutSummary2: WorkoutSummary = {
   workoutId: 102,
@@ -218,11 +210,8 @@ export function createMockClient() {
     downloadAttachment: vi.fn().mockResolvedValue(mockFitBuffer),
     getFitnessData: vi.fn().mockResolvedValue([mockFitnessMetrics]),
     getCurrentFitness: vi.fn().mockResolvedValue(mockFitnessMetrics),
-    getPeaks: vi.fn().mockResolvedValue(mockPeaksResponse),
-    getAllPeaks: vi.fn().mockResolvedValue(mockPeaksResponse),
+    getPeaks: vi.fn().mockResolvedValue(mockPeakData),
     getWorkoutPeaks: vi.fn().mockResolvedValue(mockWorkoutPeaks),
-    getPowerPeaks: vi.fn().mockResolvedValue(mockPeakData),
-    getRunningPeaks: vi.fn().mockResolvedValue(mockPeakData),
     getStrengthWorkouts: vi.fn().mockResolvedValue([mockStrengthWorkoutSummary]),
     close: vi.fn().mockResolvedValue(undefined),
   };

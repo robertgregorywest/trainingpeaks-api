@@ -53,15 +53,9 @@ import {
 
 import {
   getPeaksSchema,
-  getAllPeaksSchema,
   getWorkoutPeaksSchema,
-  getPowerPeaksSchema,
-  getRunningPeaksSchema,
   getPeaks,
-  getAllPeaks,
   getWorkoutPeaks,
-  getPowerPeaks,
-  getRunningPeaks,
 } from './tools/peaks.js';
 
 type ToolResult = { content: Array<{ type: 'text'; text: string }> };
@@ -185,31 +179,10 @@ export function createMcpServer(client: TrainingPeaksClient): McpServer {
   );
 
   tool(
-    'get_all_peaks',
-    'Get all peaks/personal records for a sport',
-    getAllPeaksSchema.shape,
-    (args) => getAllPeaks(client, args)
-  );
-
-  tool(
     'get_workout_peaks',
     'Get peaks/PRs achieved in a specific workout',
     getWorkoutPeaksSchema.shape,
     (args) => getWorkoutPeaks(client, args)
-  );
-
-  tool(
-    'get_power_peaks',
-    'Get cycling power peaks (convenience method for bike power PRs)',
-    getPowerPeaksSchema.shape,
-    (args) => getPowerPeaks(client, args)
-  );
-
-  tool(
-    'get_running_peaks',
-    'Get running pace peaks (convenience method for running PRs)',
-    getRunningPeaksSchema.shape,
-    (args) => getRunningPeaks(client, args)
   );
 
   // Power analysis tools

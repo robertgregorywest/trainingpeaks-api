@@ -37,6 +37,7 @@
     "explore:intervals": "tsx scripts/explore-intervals.ts",
     "explore:fitness": "tsx scripts/explore-fitness.ts",
     "explore:strength": "tsx scripts/explore-strength.ts",
+    "explore:peaks": "tsx scripts/explore-peaks.ts",
     "mcpb:pack": "mcpb pack"
   },
   "keywords": [

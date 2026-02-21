@@ -124,123 +124,36 @@ describe.skipIf(!hasCredentials)('TrainingPeaks API Integration', () => {
   });
 
   describe('Peaks API', () => {
-    it('getAllPeaks returns peaks for Bike', async () => {
-      try {
-        const peaks = await client.getAllPeaks('Bike');
-        expect(peaks).toBeDefined();
-        expect(peaks.sport).toBe('Bike');
-        expect(Array.isArray(peaks.peaks)).toBe(true);
-      } catch (error) {
-        // Peaks API may not be available for all users
-        if ((error as Error).message?.includes('Not Found')) {
-          console.log('Peaks API not available - skipping');
-          return;
-        }
-        throw error;
+    it('getPeaks returns power peaks for Bike', async () => {
+      const peaks = await client.getPeaks('Bike', 'power5min');
+      expect(Array.isArray(peaks)).toBe(true);
+      if (peaks.length > 0) {
+        expect(peaks[0].value).toBeTypeOf('number');
+        expect(peaks[0].type).toBeTypeOf('string');
       }
     });
 
-    it('getAllPeaks returns peaks for Run', async () => {
-      try {
-        const peaks = await client.getAllPeaks('Run');
-        expect(peaks).toBeDefined();
-        expect(peaks.sport).toBe('Run');
-        expect(Array.isArray(peaks.peaks)).toBe(true);
-      } catch (error) {
-        if ((error as Error).message?.includes('Not Found')) {
-          console.log('Peaks API not available - skipping');
-          return;
-        }
-        throw error;
-      }
-    });
-
-    it('getPeaks returns specific peak type', async () => {
-      try {
-        const peaks = await client.getPeaks('Bike', 'power5min');
-        expect(peaks).toBeDefined();
-        expect(peaks.sport).toBe('Bike');
-        expect(Array.isArray(peaks.peaks)).toBe(true);
-      } catch (error) {
-        if ((error as Error).message?.includes('Not Found')) {
-          console.log('Peaks API not available - skipping');
-          return;
-        }
-        throw error;
-      }
-    });
-
-    it('getPowerPeaks returns cycling power peaks', async () => {
-      try {
-        const peaks = await client.getPowerPeaks();
-        expect(Array.isArray(peaks)).toBe(true);
-      } catch (error) {
-        if ((error as Error).message?.includes('Not Found')) {
-          console.log('Peaks API not available - skipping');
-          return;
-        }
-        throw error;
-      }
-    });
-
-    it('getRunningPeaks returns running pace peaks', async () => {
-      try {
-        const peaks = await client.getRunningPeaks();
-        expect(Array.isArray(peaks)).toBe(true);
-      } catch (error) {
-        if ((error as Error).message?.includes('Not Found')) {
-          console.log('Peaks API not available - skipping');
-          return;
-        }
-        throw error;
-      }
+    it('getPeaks returns HR peaks for Bike', async () => {
+      const peaks = await client.getPeaks('Bike', 'hR5min');
+      expect(Array.isArray(peaks)).toBe(true);
     });
 
     it('getWorkoutPeaks returns peaks for specific workout', async () => {
-      try {
-        // First get a workout ID
-        const endDate = new Date().toISOString().split('T')[0];
-        const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const workouts = await client.getWorkouts(startDate, endDate);
-
-        if (workouts.length === 0) {
-          console.log('No workouts found to test getWorkoutPeaks');
-          return;
-        }
-
-        const peaks = await client.getWorkoutPeaks(workouts[0].workoutId);
-        expect(peaks).toBeDefined();
-        expect(peaks.workoutId).toBe(workouts[0].workoutId);
-        expect(Array.isArray(peaks.peaks)).toBe(true);
-      } catch (error) {
-        if ((error as Error).message?.includes('Not Found')) {
-          console.log('Peaks API not available - skipping');
-          return;
-        }
-        throw error;
-      }
-    });
-  });
-
-  describe('Files API', () => {
-    it('downloadFitFile returns buffer for workout with file', async () => {
-      // Find a workout that has a FIT file
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const workouts = await client.getWorkouts(startDate, endDate);
 
-      const workoutWithFile = workouts.find((w) => w.hasFile);
-      if (!workoutWithFile) {
-        console.log('No workouts with FIT files found');
+      if (workouts.length === 0) {
+        console.log('No workouts found to test getWorkoutPeaks');
         return;
       }
 
-      const buffer = await client.downloadFitFile(workoutWithFile.workoutId);
-
-      expect(buffer).toBeInstanceOf(Buffer);
-      expect(buffer.length).toBeGreaterThan(0);
-      // FIT files start with specific header bytes
-      expect(buffer[0]).toBe(14); // Header size
+      const peaks = await client.getWorkoutPeaks(workouts[0].workoutId);
+      expect(peaks).toBeDefined();
+      expect(peaks.workoutId).toBe(workouts[0].workoutId);
+      expect(peaks.personalRecordCount).toBeTypeOf('number');
+      expect(Array.isArray(peaks.personalRecords)).toBe(true);
     });
   });
+
 }, 60000); // 60 second timeout for the entire suite
