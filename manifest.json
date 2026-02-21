@@ -1,6 +1,6 @@
 {
   "manifest_version": "0.3",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "name": "trainingpeaks-mcp",
   "display_name": "TrainingPeaks",
   "description": "Access your TrainingPeaks training data — workouts, fitness metrics, peaks/PRs, and FIT files",
@@ -100,6 +100,10 @@
     {
       "name": "get_power_duration_curve",
       "description": "Build a power-duration curve across cycling workouts in a date range"
+    },
+    {
+      "name": "get_aerobic_decoupling",
+      "description": "Calculate aerobic decoupling (Pw:Hr) from a workout FIT file — measures cardiac drift between first and second halves"
     },
     {
       "name": "get_current_date",
