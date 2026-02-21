@@ -47,6 +47,8 @@ import {
   getCurrentTime,
 } from './tools/datetime.js';
 
+import { getBestPowerSchema, getBestPower } from './tools/power.js';
+
 import {
   getPeaksSchema,
   getAllPeaksSchema,
@@ -208,6 +210,14 @@ export function createMcpServer(client: TrainingPeaksClient): McpServer {
     'Get running pace peaks (convenience method for running PRs)',
     getRunningPeaksSchema.shape,
     withLogging('get_running_peaks', (args) => getRunningPeaks(client, args))
+  );
+
+  // Power analysis tools
+  server.tool(
+    'get_best_power',
+    'Compute best power from raw FIT file for arbitrary durations (e.g., 3min, 8min, 45min)',
+    getBestPowerSchema.shape,
+    withLogging('get_best_power', (args) => getBestPower(client, args))
   );
 
   // Datetime tools
