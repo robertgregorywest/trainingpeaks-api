@@ -25,6 +25,7 @@ interface UserApiResponse {
 export class UserApi {
   private client: HttpClient;
   private cachedUser: User | null = null;
+  private fetchPromise: Promise<User> | null = null;
 
   constructor(client: HttpClient) {
     this.client = client;
@@ -35,6 +36,17 @@ export class UserApi {
       return this.cachedUser;
     }
 
+    if (this.fetchPromise) {
+      return this.fetchPromise;
+    }
+
+    this.fetchPromise = this.fetchUser().finally(() => {
+      this.fetchPromise = null;
+    });
+    return this.fetchPromise;
+  }
+
+  private async fetchUser(): Promise<User> {
     const response = await this.client.request<UserApiResponse>('/users/v3/user');
 
     if (!response || !response.user) {
@@ -67,6 +79,7 @@ export class UserApi {
 
   clearCache(): void {
     this.cachedUser = null;
+    this.fetchPromise = null;
   }
 }
 

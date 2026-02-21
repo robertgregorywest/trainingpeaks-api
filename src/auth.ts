@@ -10,6 +10,7 @@ export class AuthManager {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
   private headless: boolean;
+  private authenticatePromise: Promise<string> | null = null;
 
   constructor(credentials: AuthCredentials, headless = true) {
     this.credentials = credentials;
@@ -17,10 +18,22 @@ export class AuthManager {
   }
 
   async authenticate(): Promise<string> {
-    console.error(`[trainingpeaks-mcp] Authenticating (user=${this.credentials.username}, pass length=${this.credentials.password.length})`);
     if (this.token && !this.isTokenExpired()) {
       return this.token.token;
     }
+
+    if (this.authenticatePromise) {
+      return this.authenticatePromise;
+    }
+
+    this.authenticatePromise = this.doAuthenticate().finally(() => {
+      this.authenticatePromise = null;
+    });
+    return this.authenticatePromise;
+  }
+
+  private async doAuthenticate(): Promise<string> {
+    console.error(`[trainingpeaks-mcp] Authenticating (user=${this.credentials.username}, pass length=${this.credentials.password.length})`);
 
     const { chromium } = await import('playwright');
     this.browser = await chromium.launch({ headless: this.headless });
@@ -108,6 +121,7 @@ export class AuthManager {
 
   async refreshToken(): Promise<string> {
     this.token = null;
+    this.authenticatePromise = null;
     return this.authenticate();
   }
 
