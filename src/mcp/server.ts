@@ -42,16 +42,14 @@ import {
   getCurrentFitness,
 } from './tools/fitness.js';
 
-import {
-  getCurrentDatetimeSchema,
-  getCurrentDateSchema,
-  getCurrentTimeSchema,
-  getCurrentDatetime,
-  getCurrentDate,
-  getCurrentTime,
-} from './tools/datetime.js';
+import { getCurrentDateSchema, getCurrentDate } from './tools/datetime.js';
 
-import { getBestPowerSchema, getBestPower } from './tools/power.js';
+import {
+  getBestPowerSchema,
+  getBestPower,
+  getPowerDurationCurveSchema,
+  getPowerDurationCurve,
+} from './tools/power.js';
 
 import {
   getPeaksSchema,
@@ -222,26 +220,19 @@ export function createMcpServer(client: TrainingPeaksClient): McpServer {
     (args) => getBestPower(client, args)
   );
 
-  // Datetime tools
   tool(
-    'get_current_datetime',
-    'Get the current date and time in various formats with optional timezone',
-    getCurrentDatetimeSchema.shape,
-    (args) => getCurrentDatetime(args)
+    'get_power_duration_curve',
+    'Build a power-duration curve across cycling workouts in a date range, finding best power at standardised durations via FIT file analysis',
+    getPowerDurationCurveSchema.shape,
+    (args) => getPowerDurationCurve(client, args)
   );
 
+  // Datetime tools
   tool(
     'get_current_date',
     'Get the current date in various formats (ISO, US, EU, custom)',
     getCurrentDateSchema.shape,
     (args) => getCurrentDate(args)
-  );
-
-  tool(
-    'get_current_time',
-    'Get the current time in various formats (24h, 12h, custom)',
-    getCurrentTimeSchema.shape,
-    (args) => getCurrentTime(args)
   );
 
   return server;

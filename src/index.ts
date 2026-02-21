@@ -5,6 +5,10 @@ import { WorkoutsApi, createWorkoutsApi } from './api/workouts.js';
 import { FilesApi, createFilesApi } from './api/files.js';
 import { FitnessApi, createFitnessApi } from './api/fitness.js';
 import { PeaksApi, createPeaksApi } from './api/peaks.js';
+import {
+  buildPowerDurationCurve,
+  type BuildPowerDurationCurveOptions,
+} from './mcp/tools/power.js';
 import type {
   ClientOptions,
   User,
@@ -18,6 +22,7 @@ import type {
   WorkoutPeaks,
   GetWorkoutsOptions,
   GetPeaksOptions,
+  PowerDurationCurveResult,
 } from './types.js';
 
 export class TrainingPeaksClient {
@@ -128,6 +133,13 @@ export class TrainingPeaksClient {
     return this.peaksApi.getRunningPeaks(options);
   }
 
+  // Power analysis
+  async getPowerDurationCurve(
+    options: BuildPowerDurationCurveOptions
+  ): Promise<PowerDurationCurveResult> {
+    return buildPowerDurationCurve(this, options);
+  }
+
   // Cleanup
   async close(): Promise<void> {
     await this.authManager.close();
@@ -160,6 +172,8 @@ export type {
   GetPeaksOptions,
   AuthCredentials,
   AuthToken,
+  PowerDurationPoint,
+  PowerDurationCurveResult,
 } from './types.js';
 
 // Export error class

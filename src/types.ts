@@ -208,6 +208,25 @@ export interface WorkoutPeaks {
   peaks: PeakData[];
 }
 
+// Power Duration Curve
+export interface PowerDurationPoint {
+  durationSeconds: number;
+  durationLabel: string;
+  bestPowerWatts: number;
+  workoutId: number;
+  workoutDate: string;
+  workoutTitle?: string;
+}
+
+export interface PowerDurationCurveResult {
+  startDate: string;
+  endDate: string;
+  workoutsAnalysed: number;
+  workoutsSkipped: number;
+  curve: PowerDurationPoint[];
+  warnings: string[];
+}
+
 // API Options
 export interface GetWorkoutsOptions {
   includeDeleted?: boolean;

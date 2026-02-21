@@ -114,16 +114,12 @@
       "description": "Compute best power from raw FIT file for arbitrary durations (e.g., 3min, 8min, 45min)"
     },
     {
-      "name": "get_current_datetime",
-      "description": "Get the current date and time in various formats with optional timezone"
+      "name": "get_power_duration_curve",
+      "description": "Build a power-duration curve across cycling workouts in a date range"
     },
     {
       "name": "get_current_date",
       "description": "Get the current date in various formats (ISO, US, EU, custom)"
-    },
-    {
-      "name": "get_current_time",
-      "description": "Get the current time in various formats (24h, 12h, custom)"
     }
   ],
   "compatibility": {

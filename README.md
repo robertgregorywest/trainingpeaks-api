@@ -4,7 +4,7 @@ An MCP (Model Context Protocol) server for accessing your TrainingPeaks training
 
 ## Features
 
-- **21 tools** for accessing workouts, strength workouts, fitness metrics, peaks/PRs, power analysis, files, and datetime
+- **20 tools** for accessing workouts, strength workouts, fitness metrics, peaks/PRs, power analysis, files, and date resolution
 - **Dual transport**: stdio for Claude Desktop, HTTP for ChatGPT
 - **FIT file parsing**: Extract structured data from downloaded FIT files
 - Also usable as a standalone TypeScript library
@@ -126,9 +126,8 @@ Requires **Node.js 20+**.
 | `get_power_peaks` | Get cycling power PRs |
 | `get_running_peaks` | Get running pace PRs |
 | `get_best_power` | Compute best power from raw FIT file for arbitrary durations (e.g., 3min, 8min, 45min) |
-| `get_current_datetime` | Get current date and time with optional timezone |
+| `get_power_duration_curve` | Build a power-duration curve across cycling workouts in a date range |
 | `get_current_date` | Get current date in ISO, US, EU, or custom format |
-| `get_current_time` | Get current time in 24h, 12h, or custom format |
 
 ## Example Prompts
 
@@ -140,7 +139,8 @@ Requires **Node.js 20+**.
 - "Search for all my tempo workouts in the last 30 days"
 - "Compare the intervals across my last 3 threshold rides"
 - "What's my best 3-minute and 8-minute power from yesterday's ride?"
-- "What is the current date and time?"
+- "Build my power-duration curve for the last 6 weeks"
+- "What is today's date?"
 
 ## Environment Variables
 
@@ -182,6 +182,13 @@ console.log(details.metrics);
 // Get current fitness
 const fitness = await client.getCurrentFitness();
 console.log(`CTL: ${fitness.ctl}, ATL: ${fitness.atl}, TSB: ${fitness.tsb}`);
+
+// Build a power-duration curve from the last 6 weeks of rides
+const curve = await client.getPowerDurationCurve({
+  startDate: '2024-11-01',
+  endDate: '2024-12-15',
+});
+console.log(curve.curve.map((p) => `${p.durationLabel}: ${p.bestPowerWatts}W`));
 
 // Clean up when done
 await client.close();

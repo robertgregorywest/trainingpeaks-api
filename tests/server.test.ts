@@ -38,9 +38,8 @@ describe('MCP Server', () => {
         'get_power_peaks',
         'get_running_peaks',
         'get_best_power',
-        'get_current_datetime',
+        'get_power_duration_curve',
         'get_current_date',
-        'get_current_time',
       ];
 
       // Access registered tools via the internal _registeredTools object
