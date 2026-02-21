@@ -53,9 +53,25 @@ export async function getCurrentDatetime(
       result = applyCustomFormat(now, args.customFormat ?? 'YYYY-MM-DD HH:mm:ss', args.timezone);
       break;
     default:
-      result = args.timezone
-        ? new Date(now.toLocaleString('en-US', { timeZone: args.timezone })).toISOString()
-        : now.toISOString();
+      if (args.timezone) {
+        const fmt = new Intl.DateTimeFormat('en-CA', {
+          timeZone: args.timezone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+          fractionalSecondDigits: 3,
+        });
+        const parts = Object.fromEntries(
+          fmt.formatToParts(now).map((p) => [p.type, p.value])
+        );
+        result = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}.${parts.fractionalSecond}`;
+      } else {
+        result = now.toISOString();
+      }
       break;
   }
 

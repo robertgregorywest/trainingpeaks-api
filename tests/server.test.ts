@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { createMcpServer } from '../src/mcp/server.js';
 import { createMockClient, mockUser, type MockClient } from './mocks/client.js';
 import type { TrainingPeaksClient } from '../src/index.js';
@@ -16,19 +16,18 @@ describe('MCP Server', () => {
       expect(server).toBeDefined();
     });
 
-    it('should register all 15 tools', async () => {
+    it('should register all expected tools', async () => {
       const server = createMcpServer(mockClient as unknown as TrainingPeaksClient);
 
-      // Access internal tools list via the server
-      // The MCP SDK stores tools internally, we can verify by checking the tool count
-      // by attempting to list tools through the server's internal state
       const expectedTools = [
         'get_user',
         'get_athlete_id',
         'get_workouts',
         'get_workout',
         'get_workout_details',
-        'download_fit_file',
+        'search_workouts',
+        'compare_intervals',
+        'get_strength_workouts',
         'download_attachment',
         'parse_fit_file',
         'get_fitness_data',
@@ -38,18 +37,24 @@ describe('MCP Server', () => {
         'get_workout_peaks',
         'get_power_peaks',
         'get_running_peaks',
+        'get_best_power',
+        'get_current_datetime',
+        'get_current_date',
+        'get_current_time',
       ];
 
-      // Server is created successfully if no errors
-      expect(server).toBeDefined();
-      // We have 15 tools registered
-      expect(expectedTools.length).toBe(15);
+      // Access registered tools via the internal _registeredTools object
+      const registeredTools = (server as unknown as { _registeredTools: Record<string, unknown> })
+        ._registeredTools;
+      const toolNames = Object.keys(registeredTools);
+
+      expect(toolNames).toEqual(expect.arrayContaining(expectedTools));
+      expect(toolNames).toHaveLength(expectedTools.length);
     });
   });
 
   describe('tool execution', () => {
     it('should execute get_user tool correctly', async () => {
-      // Test that the mock client methods are callable
       const result = await mockClient.getUser();
       expect(result).toEqual(mockUser);
     });

@@ -4,6 +4,7 @@ import {
   getWorkout,
   getWorkoutDetails,
   searchWorkouts,
+  searchWorkoutsSchema,
   compareIntervals,
   parseLapsFromFit,
   getStrengthWorkouts,
@@ -21,35 +22,19 @@ import {
   type MockClient,
 } from '../mocks/client.js';
 import type { TrainingPeaksClient } from '../../src/index.js';
-import type { WorkoutLap } from '../../src/types.js';
 
-// Mock @garmin/fitsdk used by parseLapsFromFit
-vi.mock('@garmin/fitsdk', () => ({
-  Decoder: vi.fn(),
-  Stream: {
-    fromBuffer: vi.fn(),
-  },
-}));
+// Mock fit-utils used by parseLapsFromFit and compareIntervals
+import * as fitUtils from '../../src/mcp/tools/fit-utils.js';
+vi.mock('../../src/mcp/tools/fit-utils.js');
 
-// Import mocked module so we can control behavior per test
-import { Decoder, Stream } from '@garmin/fitsdk';
+const mockDecodeFitBuffer = vi.mocked(fitUtils.decodeFitBuffer);
 
 function setupFitMock(lapMesgs: Record<string, unknown>[]) {
-  (Stream.fromBuffer as ReturnType<typeof vi.fn>).mockReturnValue('mock-stream');
-  (Decoder as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
-    isFIT: () => true,
-    checkIntegrity: () => true,
-    read: () => ({ messages: { lapMesgs } }),
-  }));
+  mockDecodeFitBuffer.mockResolvedValue({ lapMesgs });
 }
 
 function setupFitMockInvalid() {
-  (Stream.fromBuffer as ReturnType<typeof vi.fn>).mockReturnValue('mock-stream');
-  (Decoder as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
-    isFIT: () => false,
-    checkIntegrity: () => false,
-    read: () => ({ messages: {} }),
-  }));
+  mockDecodeFitBuffer.mockRejectedValue(new Error('Not a valid FIT file'));
 }
 
 describe('workout tools', () => {
@@ -196,10 +181,8 @@ describe('workout tools', () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date('2024-04-01'));
 
-      await searchWorkouts(mockClient as unknown as TrainingPeaksClient, {
-        title: 'ride',
-        days: 90,
-      });
+      const args = searchWorkoutsSchema.parse({ title: 'ride' });
+      await searchWorkouts(mockClient as unknown as TrainingPeaksClient, args);
 
       expect(mockClient.getWorkouts).toHaveBeenCalledWith('2024-01-02', '2024-04-01');
 
@@ -208,13 +191,13 @@ describe('workout tools', () => {
   });
 
   describe('parseLapsFromFit', () => {
-    it('should parse FIT lap messages into WorkoutLap array', () => {
+    it('should parse FIT lap messages into WorkoutLap array', async () => {
       setupFitMock([
         { avgPower: 200, maxPower: 400, totalElapsedTime: 1800, totalDistance: 20000, avgHeartRate: 145, maxHeartRate: 170 },
         { avgPower: 230, maxPower: 480, totalElapsedTime: 1800, totalDistance: 20000, avgHeartRate: 155, maxHeartRate: 180 },
       ]);
 
-      const laps = parseLapsFromFit(Buffer.from('fake'));
+      const laps = await parseLapsFromFit(Buffer.from('fake'));
       expect(laps).toHaveLength(2);
       expect(laps[0]).toEqual({
         lapNumber: 1,
@@ -229,15 +212,15 @@ describe('workout tools', () => {
       expect(laps[1].averagePower).toBe(230);
     });
 
-    it('should return empty array for invalid FIT file', () => {
+    it('should return empty array for invalid FIT file', async () => {
       setupFitMockInvalid();
-      const laps = parseLapsFromFit(Buffer.from('bad'));
+      const laps = await parseLapsFromFit(Buffer.from('bad'));
       expect(laps).toHaveLength(0);
     });
 
-    it('should return empty array when no lap messages', () => {
+    it('should return empty array when no lap messages', async () => {
       setupFitMock([]);
-      const laps = parseLapsFromFit(Buffer.from('fake'));
+      const laps = await parseLapsFromFit(Buffer.from('fake'));
       expect(laps).toHaveLength(0);
     });
   });
@@ -257,17 +240,9 @@ describe('workout tools', () => {
         .mockResolvedValueOnce(mockWorkoutDetail2);
 
       // Set up FIT mock to return different laps per call
-      let fitCallCount = 0;
-      (Stream.fromBuffer as ReturnType<typeof vi.fn>).mockReturnValue('mock-stream');
-      (Decoder as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => {
-        const laps = fitCallCount === 0 ? fitLaps1 : fitLaps2;
-        fitCallCount++;
-        return {
-          isFIT: () => true,
-          checkIntegrity: () => true,
-          read: () => ({ messages: { lapMesgs: laps } }),
-        };
-      });
+      mockDecodeFitBuffer
+        .mockResolvedValueOnce({ lapMesgs: fitLaps1 })
+        .mockResolvedValueOnce({ lapMesgs: fitLaps2 });
 
       const result = await compareIntervals(mockClient as unknown as TrainingPeaksClient, {
         workoutIds: [100, 102],
@@ -400,6 +375,34 @@ describe('workout tools', () => {
 
       expect(parsed.laps).toHaveLength(1);
       expect(parsed.summaries).toHaveLength(1);
+    });
+
+    it('should compare 3+ workouts side-by-side', async () => {
+      const fitLaps3 = [
+        { avgPower: 250, maxPower: 500, totalElapsedTime: 1800, totalDistance: 22000, avgHeartRate: 160, maxHeartRate: 185 },
+      ];
+
+      mockClient.getWorkoutDetails
+        .mockResolvedValueOnce(mockWorkoutDetail)
+        .mockResolvedValueOnce(mockWorkoutDetail2)
+        .mockResolvedValueOnce(mockWorkoutDetailNoLaps);
+
+      mockDecodeFitBuffer
+        .mockResolvedValueOnce({ lapMesgs: fitLaps1 })
+        .mockResolvedValueOnce({ lapMesgs: fitLaps2 })
+        .mockResolvedValueOnce({ lapMesgs: fitLaps3 });
+
+      const result = await compareIntervals(mockClient as unknown as TrainingPeaksClient, {
+        workoutIds: [100, 102, 103],
+        durationTolerance: 2,
+      });
+      const parsed = JSON.parse(result);
+
+      expect(parsed.summaries).toHaveLength(3);
+      // Lap rows should have 3 values each
+      expect(parsed.laps[0].values).toHaveLength(3);
+      // Max laps = 2 (from workout 102)
+      expect(parsed.laps).toHaveLength(2);
     });
   });
 });

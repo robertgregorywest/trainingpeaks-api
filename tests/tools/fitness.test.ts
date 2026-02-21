@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getFitnessData, getCurrentFitness } from '../../src/mcp/tools/fitness.js';
 import { createMockClient, mockFitnessMetrics, type MockClient } from '../mocks/client.js';
 import type { TrainingPeaksClient } from '../../src/index.js';
@@ -30,6 +30,25 @@ describe('fitness tools', () => {
 
       expect(parsed).toEqual(mockFitnessMetrics);
       expect(mockClient.getCurrentFitness).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('error propagation', () => {
+    it('should propagate errors from getFitnessData', async () => {
+      mockClient.getFitnessData.mockRejectedValueOnce(new Error('Server error'));
+      await expect(
+        getFitnessData(mockClient as unknown as TrainingPeaksClient, {
+          startDate: '2024-01-01',
+          endDate: '2024-01-31',
+        })
+      ).rejects.toThrow('Server error');
+    });
+
+    it('should propagate errors from getCurrentFitness', async () => {
+      mockClient.getCurrentFitness.mockRejectedValueOnce(new Error('Timeout'));
+      await expect(
+        getCurrentFitness(mockClient as unknown as TrainingPeaksClient)
+      ).rejects.toThrow('Timeout');
     });
   });
 });

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { TrainingPeaksClient } from '../../index.js';
 import type { WorkoutDetail, WorkoutLap } from '../../types.js';
-import { Decoder, Stream } from '@garmin/fitsdk';
+import { decodeFitBuffer } from './fit-utils.js';
 
 export const getStrengthWorkoutsSchema = z.object({
   startDate: z.string().describe('Start date in YYYY-MM-DD format'),
@@ -150,8 +150,8 @@ function buildSummary(
 ): WorkoutSummaryResult {
   const powers = laps.map((l) => l.averagePower).filter((p): p is number => p !== undefined);
   const avgPower = powers.length > 0 ? Math.round(powers.reduce((a, b) => a + b, 0) / powers.length) : null;
-  const minPower = powers.length > 0 ? Math.min(...powers) : null;
-  const maxPower = powers.length > 0 ? Math.max(...powers) : null;
+  const minPower = powers.length > 0 ? powers.reduce((a, b) => (b < a ? b : a), powers[0]) : null;
+  const maxPower = powers.length > 0 ? powers.reduce((a, b) => (b > a ? b : a), powers[0]) : null;
   const powerRange = minPower !== null && maxPower !== null ? maxPower - minPower : null;
   const totalDuration = laps.reduce((sum, l) => sum + (l.duration ?? 0), 0);
 
@@ -168,15 +168,14 @@ function buildSummary(
   };
 }
 
-export function parseLapsFromFit(buffer: Buffer): WorkoutLap[] {
-  const stream = Stream.fromBuffer(buffer);
-  const decoder = new Decoder(stream);
-
-  if (!decoder.isFIT() || !decoder.checkIntegrity()) {
+export async function parseLapsFromFit(buffer: Buffer): Promise<WorkoutLap[]> {
+  let messages;
+  try {
+    messages = await decodeFitBuffer(buffer);
+  } catch {
     return [];
   }
 
-  const { messages } = decoder.read();
   const lapMesgs = messages.lapMesgs;
   if (!lapMesgs || lapMesgs.length === 0) {
     return [];
@@ -210,19 +209,21 @@ export async function compareIntervals(
 
   const warnings: string[] = [];
 
-  const workoutLaps: { detail: WorkoutDetail; laps: WorkoutLap[] }[] = fetches.map(({ detail, fitBuffer }) => {
-    let laps: WorkoutLap[];
-    if (fitBuffer) {
-      laps = parseLapsFromFit(fitBuffer);
-      if (laps.length === 0) {
-        warnings.push(`Workout ${detail.workoutId} (${detail.title ?? 'Untitled'}): FIT file contains no laps`);
+  const workoutLaps: { detail: WorkoutDetail; laps: WorkoutLap[] }[] = await Promise.all(
+    fetches.map(async ({ detail, fitBuffer }) => {
+      let laps: WorkoutLap[];
+      if (fitBuffer) {
+        laps = await parseLapsFromFit(fitBuffer);
+        if (laps.length === 0) {
+          warnings.push(`Workout ${detail.workoutId} (${detail.title ?? 'Untitled'}): FIT file contains no laps`);
+        }
+      } else {
+        laps = [];
+        warnings.push(`Workout ${detail.workoutId} (${detail.title ?? 'Untitled'}): no FIT file available`);
       }
-    } else {
-      laps = [];
-      warnings.push(`Workout ${detail.workoutId} (${detail.title ?? 'Untitled'}): no FIT file available`);
-    }
-    return { detail, laps: filterLaps(laps, args) };
-  });
+      return { detail, laps: filterLaps(laps, args) };
+    })
+  );
 
   // Align laps side-by-side
   const maxLaps = Math.max(...workoutLaps.map((w) => w.laps.length), 0);

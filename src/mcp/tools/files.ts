@@ -3,6 +3,7 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { TrainingPeaksClient } from '../../index.js';
+import { decodeFitBuffer } from './fit-utils.js';
 
 export const downloadAttachmentSchema = z.object({
   workoutId: z.number().describe('The workout ID'),
@@ -34,22 +35,8 @@ export async function downloadAttachment(
 }
 
 export async function parseFitFile(args: z.infer<typeof parseFitFileSchema>): Promise<string> {
-  // Dynamic import to handle the FIT SDK
-  const { Decoder, Stream } = await import('@garmin/fitsdk');
-
   const buffer = await fs.readFile(args.filePath);
-  const stream = Stream.fromBuffer(buffer);
-  const decoder = new Decoder(stream);
-
-  if (!decoder.isFIT()) {
-    throw new Error('File is not a valid FIT file');
-  }
-
-  if (!decoder.checkIntegrity()) {
-    throw new Error('FIT file integrity check failed');
-  }
-
-  const { messages } = decoder.read();
+  const messages = await decodeFitBuffer(buffer);
 
   // Extract key data from FIT file
   const result: Record<string, unknown> = {};

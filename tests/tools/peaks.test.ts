@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   getPeaks,
   getAllPeaks,
@@ -108,6 +108,25 @@ describe('peaks tools', () => {
         endDate: undefined,
         limit: undefined,
       });
+    });
+  });
+
+  describe('error propagation', () => {
+    it('should propagate errors from getPeaks', async () => {
+      mockClient.getPeaks.mockRejectedValueOnce(new Error('API error'));
+      await expect(
+        getPeaks(mockClient as unknown as TrainingPeaksClient, {
+          sport: 'Bike',
+          type: 'power5min',
+        })
+      ).rejects.toThrow('API error');
+    });
+
+    it('should propagate errors from getWorkoutPeaks', async () => {
+      mockClient.getWorkoutPeaks.mockRejectedValueOnce(new Error('Not found'));
+      await expect(
+        getWorkoutPeaks(mockClient as unknown as TrainingPeaksClient, { workoutId: 999 })
+      ).rejects.toThrow('Not found');
     });
   });
 });

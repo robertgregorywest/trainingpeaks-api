@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getUser, getAthleteId } from '../../src/mcp/tools/user.js';
 import { createMockClient, mockUser, type MockClient } from '../mocks/client.js';
 import type { TrainingPeaksClient } from '../../src/index.js';
@@ -27,6 +27,22 @@ describe('user tools', () => {
 
       expect(parsed).toEqual({ athleteId: 12345 });
       expect(mockClient.getAthleteId).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('error propagation', () => {
+    it('should propagate errors from getUser', async () => {
+      mockClient.getUser.mockRejectedValueOnce(new Error('Auth failed'));
+      await expect(getUser(mockClient as unknown as TrainingPeaksClient)).rejects.toThrow(
+        'Auth failed'
+      );
+    });
+
+    it('should propagate errors from getAthleteId', async () => {
+      mockClient.getAthleteId.mockRejectedValueOnce(new Error('Network error'));
+      await expect(getAthleteId(mockClient as unknown as TrainingPeaksClient)).rejects.toThrow(
+        'Network error'
+      );
     });
   });
 });

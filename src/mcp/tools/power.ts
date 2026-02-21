@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { TrainingPeaksClient } from '../../index.js';
+import { decodeFitBuffer } from './fit-utils.js';
 
 export const getBestPowerSchema = z.object({
   workoutId: z.number().describe('The workout ID'),
@@ -49,15 +50,7 @@ export async function getBestPower(
     throw new Error(`No activity file available for workout ${args.workoutId}`);
   }
 
-  const { Decoder, Stream } = await import('@garmin/fitsdk');
-  const stream = Stream.fromBuffer(buffer);
-  const decoder = new Decoder(stream);
-
-  if (!decoder.isFIT()) {
-    throw new Error('Downloaded file is not a valid FIT file');
-  }
-
-  const { messages } = decoder.read();
+  const messages = await decodeFitBuffer(buffer);
   const recordMesgs = messages.recordMesgs;
 
   if (!recordMesgs || recordMesgs.length === 0) {

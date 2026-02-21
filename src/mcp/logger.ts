@@ -91,7 +91,6 @@ function summarizeResponse(toolName: string, data: unknown): string {
         }
         break;
 
-      case 'download_fit_file':
       case 'download_attachment':
         return `${COLORS.magenta}${parsed.filePath}${COLORS.reset} (${formatBytes(parsed.size)})`;
 

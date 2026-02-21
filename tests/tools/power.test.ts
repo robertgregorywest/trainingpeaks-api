@@ -3,19 +3,10 @@ import { computeBestPower, getBestPower } from '../../src/mcp/tools/power.js';
 import { createMockClient, mockWorkoutSummary, type MockClient } from '../mocks/client.js';
 import type { TrainingPeaksClient } from '../../src/index.js';
 
-const mockRead = vi.fn();
-const mockIsFIT = vi.fn();
-
-// Mock @garmin/fitsdk
-vi.mock('@garmin/fitsdk', () => ({
-  Decoder: vi.fn().mockImplementation(() => ({
-    isFIT: mockIsFIT,
-    read: mockRead,
-  })),
-  Stream: {
-    fromBuffer: vi.fn().mockReturnValue({}),
-  },
-}));
+// Mock fit-utils
+import * as fitUtils from '../../src/mcp/tools/fit-utils.js';
+vi.mock('../../src/mcp/tools/fit-utils.js');
+const mockDecodeFitBuffer = vi.mocked(fitUtils.decodeFitBuffer);
 
 describe('power tools', () => {
   describe('computeBestPower', () => {
@@ -61,11 +52,10 @@ describe('power tools', () => {
 
     beforeEach(() => {
       mockClient = createMockClient();
-      mockIsFIT.mockReturnValue(true);
     });
 
     function setupFitMock(recordMesgs: Record<string, unknown>[] | undefined) {
-      mockRead.mockReturnValue({ messages: { recordMesgs } });
+      mockDecodeFitBuffer.mockResolvedValue({ recordMesgs });
     }
 
     it('should return best power results', async () => {

@@ -1,6 +1,10 @@
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { TrainingPeaksClient } from '../index.js';
 import { logResponse, logError } from './logger.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../../package.json') as { version: string };
 
 import {
   getUserSchema,
@@ -64,182 +68,180 @@ import {
 
 type ToolResult = { content: Array<{ type: 'text'; text: string }> };
 
-// Wrapper to add logging to tool handlers
-function withLogging<T>(
-  toolName: string,
-  handler: (args: T) => Promise<string>
-): (args: T) => Promise<ToolResult> {
-  return async (args: T): Promise<ToolResult> => {
-    const start = Date.now();
-    try {
-      const content = await handler(args);
-      logResponse(toolName, content, Date.now() - start);
-      return { content: [{ type: 'text', text: content }] };
-    } catch (error) {
-      logError(toolName, error as Error, Date.now() - start);
-      throw error;
-    }
-  };
-}
-
 export function createMcpServer(client: TrainingPeaksClient): McpServer {
   const server = new McpServer({
     name: 'trainingpeaks-mcp',
-    version: '0.1.0',
+    version,
   });
 
+  // Helper that registers a tool and wraps the handler with logging
+  function tool(
+    name: string,
+    description: string,
+    schema: Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    handler: (args: any) => Promise<string>
+  ): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    server.tool(name, description, schema, async (args: any): Promise<ToolResult> => {
+      const start = Date.now();
+      try {
+        const content = await handler(args);
+        logResponse(name, content, Date.now() - start);
+        return { content: [{ type: 'text', text: content }] };
+      } catch (error) {
+        logError(name, error as Error, Date.now() - start);
+        throw error;
+      }
+    });
+  }
+
   // User tools
-  server.tool(
-    'get_user',
-    'Get the current user profile including athlete ID',
-    getUserSchema.shape,
-    withLogging('get_user', () => getUser(client))
+  tool('get_user', 'Get the current user profile including athlete ID', getUserSchema.shape, () =>
+    getUser(client)
   );
 
-  server.tool(
+  tool(
     'get_athlete_id',
     'Get just the athlete ID for the current user',
     getAthleteIdSchema.shape,
-    withLogging('get_athlete_id', () => getAthleteId(client))
+    () => getAthleteId(client)
   );
 
   // Workout tools
-  server.tool(
+  tool(
     'get_workouts',
     'Get a list of workouts within a date range',
     getWorkoutsSchema.shape,
-    withLogging('get_workouts', (args) => getWorkouts(client, args))
+    (args) => getWorkouts(client, args)
   );
 
-  server.tool(
-    'get_workout',
-    'Get a single workout summary by ID',
-    getWorkoutSchema.shape,
-    withLogging('get_workout', (args) => getWorkout(client, args))
+  tool('get_workout', 'Get a single workout summary by ID', getWorkoutSchema.shape, (args) =>
+    getWorkout(client, args)
   );
 
-  server.tool(
+  tool(
     'get_workout_details',
     'Get detailed workout data including metrics, intervals, laps, and zones',
     getWorkoutDetailsSchema.shape,
-    withLogging('get_workout_details', (args) => getWorkoutDetails(client, args))
+    (args) => getWorkoutDetails(client, args)
   );
 
-  server.tool(
+  tool(
     'search_workouts',
     'Search for workouts by title (case-insensitive substring match) within a number of days',
     searchWorkoutsSchema.shape,
-    withLogging('search_workouts', (args) => searchWorkouts(client, args))
+    (args) => searchWorkouts(client, args)
   );
 
-  server.tool(
+  tool(
     'compare_intervals',
     'Compare laps/intervals side-by-side across multiple workouts with optional power and duration filters',
     compareIntervalsSchema.shape,
-    withLogging('compare_intervals', (args) => compareIntervals(client, args))
+    (args) => compareIntervals(client, args)
   );
 
-  server.tool(
+  tool(
     'get_strength_workouts',
     'Get strength workouts within a date range (sets, blocks, exercises, compliance)',
     getStrengthWorkoutsSchema.shape,
-    withLogging('get_strength_workouts', (args) => getStrengthWorkouts(client, args))
+    (args) => getStrengthWorkouts(client, args)
   );
 
   // File tools
-  server.tool(
+  tool(
     'download_attachment',
     'Download a workout attachment. Returns the file path where it was saved.',
     downloadAttachmentSchema.shape,
-    withLogging('download_attachment', (args) => downloadAttachment(client, args))
+    (args) => downloadAttachment(client, args)
   );
 
-  server.tool(
+  tool(
     'parse_fit_file',
     'Parse a FIT file and extract structured data (sessions, laps, records)',
     parseFitFileSchema.shape,
-    withLogging('parse_fit_file', (args) => parseFitFile(args))
+    (args) => parseFitFile(args)
   );
 
   // Fitness tools
-  server.tool(
+  tool(
     'get_fitness_data',
     'Get fitness metrics (CTL, ATL, TSB) for a date range',
     getFitnessDataSchema.shape,
-    withLogging('get_fitness_data', (args) => getFitnessData(client, args))
+    (args) => getFitnessData(client, args)
   );
 
-  server.tool(
+  tool(
     'get_current_fitness',
     'Get current fitness metrics (CTL, ATL, TSB) for today',
     getCurrentFitnessSchema.shape,
-    withLogging('get_current_fitness', () => getCurrentFitness(client))
+    () => getCurrentFitness(client)
   );
 
   // Peaks tools
-  server.tool(
+  tool(
     'get_peaks',
     'Get peaks/personal records for a specific sport and type',
     getPeaksSchema.shape,
-    withLogging('get_peaks', (args) => getPeaks(client, args))
+    (args) => getPeaks(client, args)
   );
 
-  server.tool(
+  tool(
     'get_all_peaks',
     'Get all peaks/personal records for a sport',
     getAllPeaksSchema.shape,
-    withLogging('get_all_peaks', (args) => getAllPeaks(client, args))
+    (args) => getAllPeaks(client, args)
   );
 
-  server.tool(
+  tool(
     'get_workout_peaks',
     'Get peaks/PRs achieved in a specific workout',
     getWorkoutPeaksSchema.shape,
-    withLogging('get_workout_peaks', (args) => getWorkoutPeaks(client, args))
+    (args) => getWorkoutPeaks(client, args)
   );
 
-  server.tool(
+  tool(
     'get_power_peaks',
     'Get cycling power peaks (convenience method for bike power PRs)',
     getPowerPeaksSchema.shape,
-    withLogging('get_power_peaks', (args) => getPowerPeaks(client, args))
+    (args) => getPowerPeaks(client, args)
   );
 
-  server.tool(
+  tool(
     'get_running_peaks',
     'Get running pace peaks (convenience method for running PRs)',
     getRunningPeaksSchema.shape,
-    withLogging('get_running_peaks', (args) => getRunningPeaks(client, args))
+    (args) => getRunningPeaks(client, args)
   );
 
   // Power analysis tools
-  server.tool(
+  tool(
     'get_best_power',
     'Compute best power from raw FIT file for arbitrary durations (e.g., 3min, 8min, 45min)',
     getBestPowerSchema.shape,
-    withLogging('get_best_power', (args) => getBestPower(client, args))
+    (args) => getBestPower(client, args)
   );
 
   // Datetime tools
-  server.tool(
+  tool(
     'get_current_datetime',
     'Get the current date and time in various formats with optional timezone',
     getCurrentDatetimeSchema.shape,
-    withLogging('get_current_datetime', (args) => getCurrentDatetime(args))
+    (args) => getCurrentDatetime(args)
   );
 
-  server.tool(
+  tool(
     'get_current_date',
     'Get the current date in various formats (ISO, US, EU, custom)',
     getCurrentDateSchema.shape,
-    withLogging('get_current_date', (args) => getCurrentDate(args))
+    (args) => getCurrentDate(args)
   );
 
-  server.tool(
+  tool(
     'get_current_time',
     'Get the current time in various formats (24h, 12h, custom)',
     getCurrentTimeSchema.shape,
-    withLogging('get_current_time', (args) => getCurrentTime(args))
+    (args) => getCurrentTime(args)
   );
 
   return server;

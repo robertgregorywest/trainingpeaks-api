@@ -51,17 +51,15 @@ export const getWorkoutPeaksSchema = z.object({
   workoutId: z.number().describe('The workout ID'),
 });
 
-export const getPowerPeaksSchema = z.object({
+const dateRangeLimitSchema = z.object({
   startDate: z.string().optional().describe('Start date filter (YYYY-MM-DD)'),
   endDate: z.string().optional().describe('End date filter (YYYY-MM-DD)'),
   limit: z.number().optional().describe('Maximum number of results'),
 });
 
-export const getRunningPeaksSchema = z.object({
-  startDate: z.string().optional().describe('Start date filter (YYYY-MM-DD)'),
-  endDate: z.string().optional().describe('End date filter (YYYY-MM-DD)'),
-  limit: z.number().optional().describe('Maximum number of results'),
-});
+export const getPowerPeaksSchema = dateRangeLimitSchema;
+
+export const getRunningPeaksSchema = dateRangeLimitSchema;
 
 export async function getPeaks(
   client: TrainingPeaksClient,
